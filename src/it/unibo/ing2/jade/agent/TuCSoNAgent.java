@@ -31,6 +31,11 @@ public class TuCSoNAgent extends Agent {
 		public void action() {
 			try {
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
+				System.out.println("isTucsonNodeRunning? "+helper.isTucsonNodeRunning());
+				
+				if (!helper.isTucsonNodeRunning()){
+					return;
+				}
 				SynchACC acc = helper.obtainAcc(myAgent.getLocalName());
 				TucsonTupleCentreId tcid = helper.getTupleCentreId("tuple_centre", "localhost", 20504);
 				LogicTuple tuple = LogicTuple.parse("msg(X)");
@@ -62,7 +67,7 @@ public class TuCSoNAgent extends Agent {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 		}
 	}
 

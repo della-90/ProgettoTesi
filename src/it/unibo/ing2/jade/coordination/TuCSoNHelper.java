@@ -1,5 +1,6 @@
 package it.unibo.ing2.jade.coordination;
 
+import alice.logictuple.LogicTuple;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
@@ -37,5 +38,7 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 * @throws TucsonInvalidTupleCentreIdException Se il tuple centre non &egrave; valido.
 	 */
 	public TucsonTupleCentreId getTupleCentreId(String tupleCentreName, String netid, int portno) throws TucsonInvalidTupleCentreIdException;
+	
+	public boolean isTucsonNodeRunning();
 
 }
