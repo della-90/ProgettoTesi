@@ -6,7 +6,6 @@ import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -23,6 +22,7 @@ import alice.tucson.service.TucsonNodeService;
 public class TuCSoNService extends BaseService {
 
 	public static final String NAME = "it.unibo.ing2.jade.coordination.TuCSoN";
+	private final int TUCSON_PORT = 20504;
 	private TuCSoNHelper mHelper = new TuCSoNHelperImpl();
 
 	@Override
@@ -68,18 +68,19 @@ public class TuCSoNService extends BaseService {
 		}
 
 		@Override
-		public boolean isTucsonNodeRunning() {
-			boolean isInstalled = TucsonNodeService.isInstalled();
-			int port = 20504;
-			if (!isInstalled) {
-				SocketAddress addr = new InetSocketAddress(port);
-				try {
-					new Socket().bind(addr);
-				} catch (IOException e) {
-					isInstalled = true;
-				}
-			}
-			return isInstalled;
+		public void startTucsonNode(int port) throws TucsonGenericException {
+			TucsonNodeUtility.startTucsonNode(port);
+			
+		}
+
+		@Override
+		public void stopTucsonNode(int port) {
+			TucsonNodeUtility.stopTucsonNode(port);
+		}
+
+		@Override
+		public boolean isTucsonNodeRunning(int port) {
+			return TucsonNodeUtility.isTucsonNodeRunning(port);
 		}
 
 	}

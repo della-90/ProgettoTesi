@@ -1,5 +1,10 @@
 package it.unibo.ing2.jade.agent;
 
+import it.unibo.ing2.jade.coordination.TuCSoNHelper;
+import it.unibo.ing2.jade.coordination.TuCSoNService;
+import jade.core.Agent;
+import jade.core.ServiceException;
+import jade.core.behaviours.OneShotBehaviour;
 import alice.logictuple.LogicTuple;
 import alice.logictuple.exceptions.InvalidLogicTupleException;
 import alice.tucson.api.ITucsonOperation;
@@ -10,11 +15,6 @@ import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
 import alice.tucson.api.exceptions.TucsonOperationNotPossibleException;
 import alice.tucson.api.exceptions.UnreachableNodeException;
 import alice.tuplecentre.api.exceptions.OperationTimeOutException;
-import it.unibo.ing2.jade.coordination.TuCSoNHelper;
-import it.unibo.ing2.jade.coordination.TuCSoNService;
-import jade.core.Agent;
-import jade.core.ServiceException;
-import jade.core.behaviours.OneShotBehaviour;
 
 public class TuCSoNAgent extends Agent {
 	
@@ -31,9 +31,9 @@ public class TuCSoNAgent extends Agent {
 		public void action() {
 			try {
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
-				System.out.println("isTucsonNodeRunning? "+helper.isTucsonNodeRunning());
+				System.out.println("isTucsonNodeRunning? "+helper.isTucsonNodeRunning(20504));
 				
-				if (!helper.isTucsonNodeRunning()){
+				if (!helper.isTucsonNodeRunning(20504)){
 					return;
 				}
 				SynchACC acc = helper.obtainAcc(myAgent.getLocalName());

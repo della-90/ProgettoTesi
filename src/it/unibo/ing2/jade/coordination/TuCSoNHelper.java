@@ -1,13 +1,20 @@
 package it.unibo.ing2.jade.coordination;
 
-import alice.logictuple.LogicTuple;
+import jade.core.ServiceHelper;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
 import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
-import jade.core.ServiceHelper;
+import alice.tucson.service.TucsonNodeService;
 
+/**
+ * 
+ * @author Nicola
+ *
+ */
 public interface TuCSoNHelper extends ServiceHelper {
+	
+	public final int TUCSON_PORT = 20504;
 	
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC (attualmente l'ACC pi&ugrave; avanzato).
@@ -39,6 +46,25 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public TucsonTupleCentreId getTupleCentreId(String tupleCentreName, String netid, int portno) throws TucsonInvalidTupleCentreIdException;
 	
-	public boolean isTucsonNodeRunning();
+	/**
+	 * Permette di avviare un {@link TucsonNodeService} TucsonNodeService sull'host alla porta specificata.
+	 * @param port La porta del TucsonNodeService.
+	 * @exception 
+	 */
+	public void startTucsonNode(int port) throws Exception;
+	
+	
+	/**
+	 * Permette di fermare un {@link TucsonNodeService} TucsonNodeService sull'host.
+	 * @param port La porta del TucsonNodeService
+	 */
+	public void stopTucsonNode(int port);
+	
+	/**
+	 * Permette di controllare se &egrave; attivo un {@link TucsonNodeService} TucsonNodeService alla porta indicata.
+	 * @param port La porta del TucsonNodeService.
+	 * @return True se il nodo &egrave; attivo, false altrimenti.
+	 */
+	public boolean isTucsonNodeRunning(int port);
 
 }
