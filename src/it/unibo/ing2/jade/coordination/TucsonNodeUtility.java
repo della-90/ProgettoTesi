@@ -16,7 +16,9 @@ public class TucsonNodeUtility {
 		if (!isInstalled) {
 			SocketAddress addr = new InetSocketAddress(port);
 			try {
-				new Socket().bind(addr);
+				Socket s = new Socket();
+				s.bind(addr);
+				s.close();
 			} catch (IOException e) {
 				isInstalled = true;
 			}

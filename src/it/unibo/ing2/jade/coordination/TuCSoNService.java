@@ -1,5 +1,8 @@
 package it.unibo.ing2.jade.coordination;
 
+import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
+import it.unibo.ing2.jade.operations.TucsonOperationHandler;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.BaseService;
 import jade.core.ServiceException;
@@ -10,6 +13,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+import java.util.HashMap;
+import java.util.Map;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonAgentId;
 import alice.tucson.api.TucsonMetaACC;
@@ -24,6 +29,7 @@ public class TuCSoNService extends BaseService {
 	public static final String NAME = "it.unibo.ing2.jade.coordination.TuCSoN";
 	private final int TUCSON_PORT = 20504;
 	private TuCSoNHelper mHelper = new TuCSoNHelperImpl();
+	private Map<AID, EnhancedACC> mAgentACCs = new HashMap<>();
 
 	@Override
 	public String getName() {
@@ -43,19 +49,20 @@ public class TuCSoNService extends BaseService {
 		}
 
 		@Override
-		public EnhancedACC obtainAcc(String aid, String netid, int portno)
+		public EnhancedACC obtainAcc(Agent agent, String netid, int portno)
 				throws TucsonInvalidAgentIdException {
-			TucsonAgentId taid = new TucsonAgentId(aid);
+			int endIndex = agent.getName().indexOf(":");
+			String agentName = agent.getLocalName();
+ 			TucsonAgentId taid = new TucsonAgentId(agentName);
 			EnhancedACC acc = TucsonMetaACC.getContext(taid, netid, portno);
 			return acc;
 		}
 
 		@Override
-		public EnhancedACC obtainAcc(String aid)
-				throws TucsonInvalidAgentIdException {
-			TucsonAgentId taid = new TucsonAgentId(aid);
-			EnhancedACC acc = TucsonMetaACC.getContext(taid);
-			return acc;
+		public EnhancedACC obtainAcc(Agent agent) throws TucsonInvalidAgentIdException {
+			int beginIndex = agent.getName().indexOf("@");
+			int endIndex = agent.getName().indexOf(":");
+			return obtainAcc(agent, agent.getName().substring(beginIndex, endIndex) , TUCSON_PORT);
 		}
 
 		@Override
@@ -81,6 +88,15 @@ public class TuCSoNService extends BaseService {
 		@Override
 		public boolean isTucsonNodeRunning(int port) {
 			return TucsonNodeUtility.isTucsonNodeRunning(port);
+		}
+
+		@Override
+		public TucsonOperationHandler getOperationHandler(Agent agent) throws NoTucsonAuthenticationException {
+			if (!mAgentACCs.containsKey(agent.getAID())){
+				throw new NoTucsonAuthenticationException("The agent does not hold an ACC");
+			}
+			
+			return new TucsonOperationHandler(mAgentACCs.get(agent.getAID()));
 		}
 
 	}

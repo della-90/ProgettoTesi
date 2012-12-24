@@ -1,4 +1,4 @@
-package it.unibo.ing2.jade.agent;
+package it.unibo.ing2.jade.agents;
 
 import it.unibo.ing2.jade.coordination.TuCSoNHelper;
 import it.unibo.ing2.jade.coordination.TuCSoNService;
@@ -30,16 +30,20 @@ public class TuCSoNAgent extends Agent {
 		@Override
 		public void action() {
 			try {
+				System.out.println("Hello, i am "+myAgent.getName());
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
 				System.out.println("isTucsonNodeRunning? "+helper.isTucsonNodeRunning(20504));
 				
 				if (!helper.isTucsonNodeRunning(20504)){
+					System.out.println("No running TuCSoN instance. Bye!");
 					return;
 				}
-				SynchACC acc = helper.obtainAcc(myAgent.getLocalName());
+				System.out.println("Obtaining ACC");
+				SynchACC acc = helper.obtainAcc(myAgent);
+				System.out.println("ACC obtained");
 				TucsonTupleCentreId tcid = helper.getTupleCentreId("tuple_centre", "localhost", 20504);
 				LogicTuple tuple = LogicTuple.parse("msg(X)");
-				ITucsonOperation result = acc.in(tcid, tuple, null);
+				ITucsonOperation result = acc.inp(tcid, tuple, null);
 				System.out.println("Is operation completed? "+result.isOperationCompleted());
 				if (result.isOperationCompleted()){
 					LogicTuple r = result.getLogicTupleResult();

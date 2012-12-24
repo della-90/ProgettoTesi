@@ -1,5 +1,8 @@
 package it.unibo.ing2.jade.coordination;
 
+import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
+import it.unibo.ing2.jade.operations.TucsonOperationHandler;
+import jade.core.Agent;
 import jade.core.ServiceHelper;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonTupleCentreId;
@@ -18,22 +21,22 @@ public interface TuCSoNHelper extends ServiceHelper {
 	
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC (attualmente l'ACC pi&ugrave; avanzato).
-	 * @param aid L'ID dell'agente
+	 * @param agent L'agente che richiede l'ACC.
 	 * @param netid L'ID del nodo TuCSoN (indirizzo IP oppure nome DNS)
 	 * @param portno Il numero di porta del nodo TuCSoN
 	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
 	 * @throws TucsonInvalidAgentIdException Se l'<code>aid</code> specificato non &egrave; ammissibile.
 	 */
-	public EnhancedACC obtainAcc(String aid, String netid, int portno) throws TucsonInvalidAgentIdException;
+	public EnhancedACC obtainAcc(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException;
 	
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC (attualmente l'ACC pi&ugrave; avanzato).
-	 * Equivale a {@link #obtainAcc(String, String, int)} con <code>netid</code> e <code>portno</code> di default (localhost:20504)
- 	 * @param aid L'ID dell'agente
+	 * Equivale a {@link #obtainAcc(Agent, String, int)} con <code>netid</code> e <code>portno</code> di default (localhost:20504)
+ 	 * @param agent L'agente che richiede l'ACC.
 	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
 	 * @throws TucsonInvalidAgentIdException Se l'<code>aid</code> specificato non &egrave; ammissibile.
 	 */
-	public EnhancedACC obtainAcc(String aid) throws TucsonInvalidAgentIdException;
+	public EnhancedACC obtainAcc(Agent agent) throws TucsonInvalidAgentIdException;
 	
 	/**
 	 * Permette di ottenere il {@link alice.tucson.api.TucsonTupleCentreId} TucsonTupleCentreId relativo al <code>tupleCentreName</code>,<code>netid</code> e <code>portno</code>
@@ -66,5 +69,14 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 * @return True se il nodo &egrave; attivo, false altrimenti.
 	 */
 	public boolean isTucsonNodeRunning(int port);
+	
+	/**
+	 * Permette di ottenere il {@link TucsonOperationHandler} tramite il quale &egrave; possibile interagire con TuCSoN.
+	 * @param agent L'agente che richiede il TucsonOperationHandler.
+	 * @return Il TucsonOperationHandler che permette l'interazione con TuCSoN.
+	 * @throws NoTucsonAuthenticationException Se l'agente <code>agent</code> non ha ottenuto un ACC.
+	 * @see #obtainAcc(Agent, String, int)
+	 */
+	public TucsonOperationHandler getOperationHandler(Agent agent) throws NoTucsonAuthenticationException;
 
 }
