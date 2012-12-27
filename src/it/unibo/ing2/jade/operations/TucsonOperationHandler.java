@@ -9,9 +9,5 @@ public class TucsonOperationHandler {
 	public TucsonOperationHandler(EnhancedACC acc){
 		this.acc = acc;
 	}
-	
-	public void doOperation(ITucsonOperation op) throws Exception{
-		//TODO
-	}
 
 }

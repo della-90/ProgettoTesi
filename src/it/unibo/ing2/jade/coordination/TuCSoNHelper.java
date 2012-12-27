@@ -27,7 +27,7 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
 	 * @throws TucsonInvalidAgentIdException Se l'<code>aid</code> specificato non &egrave; ammissibile.
 	 */
-	public EnhancedACC obtainAcc(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException;
+//	public EnhancedACC obtainAcc(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException;
 	
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC (attualmente l'ACC pi&ugrave; avanzato).
@@ -36,7 +36,11 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
 	 * @throws TucsonInvalidAgentIdException Se l'<code>aid</code> specificato non &egrave; ammissibile.
 	 */
-	public EnhancedACC obtainAcc(Agent agent) throws TucsonInvalidAgentIdException;
+//	public EnhancedACC obtainAcc(Agent agent) throws TucsonInvalidAgentIdException;
+	
+	public void authenticate(Agent agent) throws TucsonInvalidAgentIdException;
+	public void authenticate(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException;
+	public void deauthenticate(Agent agent);
 	
 	/**
 	 * Permette di ottenere il {@link alice.tucson.api.TucsonTupleCentreId} TucsonTupleCentreId relativo al <code>tupleCentreName</code>,<code>netid</code> e <code>portno</code>
