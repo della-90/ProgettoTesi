@@ -13,6 +13,10 @@ public class TucsonOperationHandler {
 	}
 	
 	public ITucsonOperation executeSynch(TucsonAction action, Long timeout) throws Exception{
+		if (action instanceof TucsonSpecificationAction){
+			//controlla permessi
+			System.out.println("Specification action");
+		}
 		return action.executeSynch(acc, timeout);
 	}
 	

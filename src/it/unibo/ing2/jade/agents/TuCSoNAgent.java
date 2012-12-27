@@ -4,6 +4,7 @@ import it.unibo.ing2.jade.coordination.TuCSoNHelper;
 import it.unibo.ing2.jade.coordination.TuCSoNService;
 import it.unibo.ing2.jade.operations.In;
 import it.unibo.ing2.jade.operations.Out;
+import it.unibo.ing2.jade.operations.Out_s;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
 import jade.core.behaviours.OneShotBehaviour;
@@ -52,27 +53,8 @@ public class TuCSoNAgent extends Agent {
 				
 				System.out.println("Result = "+result.isOperationCompleted());
 				tuple = LogicTuple.parse("msg(X)");
-				In in = new In(tcid, tuple);
-				
-				TucsonOperationCompletionListener listener = new TucsonOperationCompletionListener() {
-					
-					@Override
-					public void operationCompleted(TupleCentreOperation arg0) {
-						
-					}
-					
-					@Override
-					public void operationCompleted(ITucsonOperation arg0) {
-//						TuCSoNInitBehaviour.this.restart();
-						System.out.println("Op completed");
-					}
-				};
-				result = mOperationHandler.executeSynch(in,null);
-				if (!result.isOperationCompleted()){
-					block();
-				} else {
-					System.out.println(result.getLogicTupleResult());
-				}
+				Out_s out_s = new Out_s(tcid, null, null, null);
+				mOperationHandler.executeSynch(out_s, null);
 				
 				//Fine! rilascio ACC
 				helper.deauthenticate(myAgent);
