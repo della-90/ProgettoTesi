@@ -2,19 +2,16 @@ package it.unibo.ing2.jade.agents;
 
 import it.unibo.ing2.jade.coordination.TuCSoNHelper;
 import it.unibo.ing2.jade.coordination.TuCSoNService;
+import it.unibo.ing2.jade.operations.In;
+import it.unibo.ing2.jade.operations.Out;
+import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
-import jade.core.ServiceException;
 import jade.core.behaviours.OneShotBehaviour;
 import alice.logictuple.LogicTuple;
-import alice.logictuple.exceptions.InvalidLogicTupleException;
 import alice.tucson.api.ITucsonOperation;
-import alice.tucson.api.SynchACC;
+import alice.tucson.api.TucsonOperationCompletionListener;
 import alice.tucson.api.TucsonTupleCentreId;
-import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
-import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
-import alice.tucson.api.exceptions.TucsonOperationNotPossibleException;
-import alice.tucson.api.exceptions.UnreachableNodeException;
-import alice.tuplecentre.api.exceptions.OperationTimeOutException;
+import alice.tuplecentre.core.TupleCentreOperation;
 
 public class TuCSoNAgent extends Agent {
 	
@@ -26,6 +23,8 @@ public class TuCSoNAgent extends Agent {
 	}
 	
 	private class TuCSoNInitBehaviour extends OneShotBehaviour {
+		
+		private TucsonOperationHandler mOperationHandler;
 			
 		@Override
 		public void action() {
@@ -35,41 +34,50 @@ public class TuCSoNAgent extends Agent {
 				System.out.println("isTucsonNodeRunning? "+helper.isTucsonNodeRunning(20504));
 				
 				if (!helper.isTucsonNodeRunning(20504)){
-					System.out.println("No running TuCSoN instance. Bye!");
-					return;
+					System.out.println("No running TuCSoN instance. Launch a new one!");
+					helper.startTucsonNode(20504);
 				}
-				System.out.println("Obtaining ACC");
-				SynchACC acc = helper.obtainAcc(myAgent);
-				System.out.println("ACC obtained");
-				TucsonTupleCentreId tcid = helper.getTupleCentreId("tuple_centre", "localhost", 20504);
-				LogicTuple tuple = LogicTuple.parse("msg(X)");
-				ITucsonOperation result = acc.inp(tcid, tuple, null);
-				System.out.println("Is operation completed? "+result.isOperationCompleted());
-				if (result.isOperationCompleted()){
-					LogicTuple r = result.getLogicTupleResult();
-					System.out.println("Arity = "+r.getArity());
-					System.out.println("Argument 0 = "+r.getArg(0));
+				
+				//Ottengo ACC
+				System.out.println("Obtaining ACC...");
+				helper.authenticate(myAgent);
+				System.out.println("ACC obtained!");
+				
+				//Creo operazione
+				TucsonTupleCentreId tcid = helper.getTupleCentreId("default", "localhost" ,20504);
+				LogicTuple tuple = LogicTuple.parse("msg('Hello, World')");
+				Out out = new Out(tcid, tuple);
+				mOperationHandler = helper.getOperationHandler(myAgent);
+				ITucsonOperation result = mOperationHandler.executeSynch(out, null);
+				
+				System.out.println("Result = "+result.isOperationCompleted());
+				tuple = LogicTuple.parse("msg(X)");
+				In in = new In(tcid, tuple);
+				
+				TucsonOperationCompletionListener listener = new TucsonOperationCompletionListener() {
+					
+					@Override
+					public void operationCompleted(TupleCentreOperation arg0) {
+						
+					}
+					
+					@Override
+					public void operationCompleted(ITucsonOperation arg0) {
+//						TuCSoNInitBehaviour.this.restart();
+						System.out.println("Op completed");
+					}
+				};
+				result = mOperationHandler.executeSynch(in,null);
+				if (!result.isOperationCompleted()){
+					block();
+				} else {
+					System.out.println(result.getLogicTupleResult());
 				}
-				acc.exit();
-			} catch (ServiceException e) {
-				System.err.println("Error on retrieving service: "+e.getMessage());
-			} catch (TucsonInvalidAgentIdException e) {
-				System.err.println("Error on agent id: "+e.getMessage());
-			} catch (TucsonInvalidTupleCentreIdException e) {
-				System.err.println("Error on tuple centre id: "+e.getMessage());
-			} catch (InvalidLogicTupleException e) {
-				System.err.println("Error on parsing logic tuple: "+e.getMessage());
-			} catch (TucsonOperationNotPossibleException e) {
 				
-				e.printStackTrace();
-			} catch (UnreachableNodeException e) {
-				
-				e.printStackTrace();
-			} catch (OperationTimeOutException e) {
-				
-				e.printStackTrace();
-			} catch (Exception e) {
-				e.printStackTrace();
+				//Fine! rilascio ACC
+				helper.deauthenticate(myAgent);
+			} catch (Exception ex){
+				ex.printStackTrace();
 			}
 
 		}

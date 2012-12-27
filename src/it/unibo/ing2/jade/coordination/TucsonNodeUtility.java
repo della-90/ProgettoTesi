@@ -12,7 +12,7 @@ public class TucsonNodeUtility {
 	
 	//TODO nella versione attuale non è ancora implementato questo metodo
 	public static boolean isTucsonNodeRunning(int port) {
-		boolean isInstalled = TucsonNodeService.isInstalled();
+		boolean isInstalled = false;//TucsonNodeService.isInstalled();
 		if (!isInstalled) {
 			SocketAddress addr = new InetSocketAddress(port);
 			try {
