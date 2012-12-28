@@ -58,6 +58,9 @@ public class TuCSoNAgent extends Agent {
 				
 				//Fine! rilascio ACC
 				helper.deauthenticate(myAgent);
+				
+				//Termino nodo tucson
+				helper.stopTucsonNode(20504);
 			} catch (Exception ex){
 				ex.printStackTrace();
 			}
