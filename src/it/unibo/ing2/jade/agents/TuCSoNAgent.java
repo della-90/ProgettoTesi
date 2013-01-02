@@ -1,12 +1,13 @@
 package it.unibo.ing2.jade.agents;
 
-import it.unibo.ing2.jade.coordination.TuCSoNHelper;
-import it.unibo.ing2.jade.coordination.TuCSoNService;
 import it.unibo.ing2.jade.operations.In;
 import it.unibo.ing2.jade.operations.Out;
 import it.unibo.ing2.jade.operations.Out_s;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
+import it.unibo.ing2.jade.service.TuCSoNHelper;
+import it.unibo.ing2.jade.service.TuCSoNService;
 import jade.core.Agent;
+import jade.core.ServiceException;
 import jade.core.behaviours.OneShotBehaviour;
 import alice.logictuple.LogicTuple;
 import alice.tucson.api.ITucsonOperation;
@@ -20,7 +21,22 @@ public class TuCSoNAgent extends Agent {
 	protected void setup() {
 		super.setup();
 		System.out.println("Agent "+getLocalName()+" started!");
-		addBehaviour(new TuCSoNInitBehaviour());
+//		addBehaviour(new TuCSoNInitBehaviour());
+		addBehaviour(new Prova());
+	}
+	
+	private class Prova extends OneShotBehaviour {
+		
+		@Override
+		public void action() {
+			try {
+				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
+				helper.foo();
+			} catch (ServiceException e) {
+				e.printStackTrace();
+			}
+			
+		}
 	}
 	
 	private class TuCSoNInitBehaviour extends OneShotBehaviour {

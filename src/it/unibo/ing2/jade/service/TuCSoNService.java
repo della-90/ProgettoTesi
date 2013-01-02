@@ -1,11 +1,24 @@
-package it.unibo.ing2.jade.coordination;
+package it.unibo.ing2.jade.service;
 
+import it.unibo.ing2.jade.coordination.TucsonAccManager;
+import it.unibo.ing2.jade.coordination.TucsonNodeUtility;
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
 import jade.core.BaseService;
+import jade.core.GenericCommand;
+import jade.core.HorizontalCommand;
+import jade.core.IMTPException;
+import jade.core.Node;
+import jade.core.Profile;
+import jade.core.Service;
 import jade.core.ServiceException;
 import jade.core.ServiceHelper;
+import jade.core.VerticalCommand;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonAgentId;
 import alice.tucson.api.TucsonMetaACC;
@@ -16,9 +29,11 @@ import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
 
 public class TuCSoNService extends BaseService {
 
-	public static final String NAME = "it.unibo.ing2.jade.coordination.TuCSoN";
+	public static final String NAME = "it.unibo.ing2.jade.service.TuCSoN";
 	private TuCSoNHelper mHelper = new TuCSoNHelperImpl();
 	private TucsonAccManager mAccManager = TucsonAccManager.getInstance();
+	private Map<String, TucsonTupleCentreId> mTupleCentres = new LinkedHashMap<>();
+	private Service.Slice localSlice;
 
 	@Override
 	public String getName() {
@@ -29,12 +44,48 @@ public class TuCSoNService extends BaseService {
 	public ServiceHelper getHelper(Agent a) throws ServiceException {
 		return mHelper;
 	}
+	
+	@Override
+	public Slice getLocalSlice() {
+		return localSlice;
+	}
+	
+	@Override
+	public void boot(Profile p) throws ServiceException {
+		super.boot(p);
+		
+		if (p.isMain()){
+			System.out.println("Main container! Running TuCSoNSliceImpl");	
+		}
+		localSlice = new TuCSoNSliceImpl();
+		
+		try {
+			TucsonTupleCentreId tcid = new TucsonTupleCentreId("provaaaa");
+			mTupleCentres.put("prova", tcid);
+		} catch (TucsonInvalidTupleCentreIdException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public Class getHorizontalInterface() {
+		return TuCSoNSlice.class;
+	}
 
 	private class TuCSoNHelperImpl implements TuCSoNHelper {
 
 		@Override
 		public void init(Agent arg0) {
-
+		}
+		
+		@Override
+		public void foo() {
+			Service.Slice ts = getLocalSlice();
+			System.out.println("TS = ? "+ts);
+			
+			GenericCommand cmd = new GenericCommand(TuCSoNSlice.H_FINDTUPLECENTRE, TuCSoNService.NAME, null);
+			cmd.addParam("provaa");
+			ts.serve(cmd);
 		}
 
 		private EnhancedACC obtainAcc(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException {
@@ -97,6 +148,38 @@ public class TuCSoNService extends BaseService {
 			return new TucsonOperationHandler(mAccManager.getAcc(agent));
 		}
 
+	}
+	
+	private class TuCSoNSliceImpl implements Service.Slice {
+
+		@Override
+		public Node getNode() throws ServiceException {
+			try {
+				return TuCSoNService.this.getLocalNode();
+			} catch (IMTPException e) {
+				//Should never happen; this is a local call
+				throw new ServiceException("Unexpected error on retrieving local node");
+			}
+		}
+
+		@Override
+		public Service getService() {
+			return TuCSoNService.this;
+		}
+
+		@Override
+		public VerticalCommand serve(HorizontalCommand cmd) {
+			String cmdName = cmd.getName();
+			switch (cmdName) {
+			case TuCSoNSlice.H_FINDTUPLECENTRE:
+				System.out.println("Called FINDTUPLECENTRE");
+				return null;
+
+			default:
+				return null;
+			}
+		}
+		
 	}
 
 }

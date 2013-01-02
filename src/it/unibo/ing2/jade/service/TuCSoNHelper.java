@@ -1,4 +1,4 @@
-package it.unibo.ing2.jade.coordination;
+package it.unibo.ing2.jade.service;
 
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
@@ -83,4 +83,6 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public TucsonOperationHandler getOperationHandler(Agent agent) throws NoTucsonAuthenticationException;
 
+	
+	public void foo();
 }
