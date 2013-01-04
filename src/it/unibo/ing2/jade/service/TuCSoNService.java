@@ -5,15 +5,20 @@ import it.unibo.ing2.jade.coordination.TucsonNodeUtility;
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
+import jade.core.AgentContainer;
 import jade.core.BaseService;
+import jade.core.ContainerID;
 import jade.core.GenericCommand;
 import jade.core.HorizontalCommand;
 import jade.core.IMTPException;
+import jade.core.MainContainer;
 import jade.core.Node;
 import jade.core.Profile;
+import jade.core.ProfileException;
 import jade.core.Service;
 import jade.core.ServiceException;
 import jade.core.ServiceHelper;
+import jade.core.Sink;
 import jade.core.VerticalCommand;
 
 import java.util.LinkedHashMap;
@@ -33,11 +38,22 @@ public class TuCSoNService extends BaseService {
 	private TuCSoNHelper mHelper = new TuCSoNHelperImpl();
 	private TucsonAccManager mAccManager = TucsonAccManager.getInstance();
 	private Map<String, TucsonTupleCentreId> mTupleCentres = new LinkedHashMap<>();
-	private Service.Slice localSlice;
+	private AgentContainer myContainer;
+	
+	//The local slice for this service
+	private ServiceComponent localSlice = new ServiceComponent();
+	private CommandSourceSink sourceSink = new CommandSourceSink();
+	private CommandTargetSink targetSink = new CommandTargetSink();
 
 	@Override
 	public String getName() {
 		return NAME;
+	}
+	
+	@Override
+	public void init(AgentContainer ac, Profile p) throws ProfileException {
+		super.init(ac, p);
+		myContainer = ac;
 	}
 
 	@Override
@@ -57,14 +73,21 @@ public class TuCSoNService extends BaseService {
 		if (p.isMain()){
 			System.out.println("Main container! Running TuCSoNSliceImpl");	
 		}
-		localSlice = new TuCSoNSliceImpl();
 		
 		try {
-			TucsonTupleCentreId tcid = new TucsonTupleCentreId("provaaaa");
+			TucsonTupleCentreId tcid = new TucsonTupleCentreId("provaa");
 			mTupleCentres.put("prova", tcid);
 		} catch (TucsonInvalidTupleCentreIdException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	@Override
+	public Sink getCommandSink(boolean direction) {
+		if (direction == Sink.COMMAND_SOURCE){
+			return sourceSink;
+		}
+		return targetSink;
 	}
 	
 	@Override
@@ -80,12 +103,18 @@ public class TuCSoNService extends BaseService {
 		
 		@Override
 		public void foo() {
-			Service.Slice ts = getLocalSlice();
-			System.out.println("TS = ? "+ts);
-			
-			GenericCommand cmd = new GenericCommand(TuCSoNSlice.H_FINDTUPLECENTRE, TuCSoNService.NAME, null);
-			cmd.addParam("provaa");
-			ts.serve(cmd);
+			try {
+				//Ottengo lo slice principale
+				TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+				//ed eseguo su esso l'operazione
+				TucsonTupleCentreId tcid = mainSlice.findTupleCentre("prova");
+				System.out.println("[foo] found: "+tcid);
+			} catch (ServiceException e) {
+				e.printStackTrace();
+			} catch (IMTPException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		private EnhancedACC obtainAcc(Agent agent, String netid, int portno) throws TucsonInvalidAgentIdException {
@@ -150,7 +179,7 @@ public class TuCSoNService extends BaseService {
 
 	}
 	
-	private class TuCSoNSliceImpl implements Service.Slice {
+	private class ServiceComponent implements Service.Slice {
 
 		@Override
 		public Node getNode() throws ServiceException {
@@ -169,15 +198,47 @@ public class TuCSoNService extends BaseService {
 
 		@Override
 		public VerticalCommand serve(HorizontalCommand cmd) {
+			VerticalCommand result = null;
 			String cmdName = cmd.getName();
 			switch (cmdName) {
 			case TuCSoNSlice.H_FINDTUPLECENTRE:
-				System.out.println("Called FINDTUPLECENTRE");
-				return null;
-
+				try {
+				String tsName = (String) cmd.getParam(0);
+				TucsonTupleCentreId tcid = mTupleCentres.get(tsName);
+				cmd.setReturnValue(tcid);
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				break;
 			default:
-				return null;
+				break;
 			}
+			
+			return result;
+		}
+		
+	}
+	
+	private class CommandSourceSink implements Sink {
+
+		@Override
+		public void consume(VerticalCommand cmd) {
+			String cmdName = cmd.getName();
+//			if (cmdName.equals(TuCSoNSlice.H_FINDTUPLECENTRE)){
+				System.out.println(cmd.getName()+" on CommandSourceSink");
+//			}
+		}
+		
+	}
+	
+	private class CommandTargetSink implements Sink {
+
+		@Override
+		public void consume(VerticalCommand cmd) {
+			String cmdName = cmd.getName();
+//			if (cmdName.equals(TuCSoNSlice.H_FINDTUPLECENTRE)){
+				System.out.println(cmd.getName()+" on CommandTargetSink");
+//			}
 		}
 		
 	}

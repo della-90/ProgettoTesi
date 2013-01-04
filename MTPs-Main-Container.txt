@@ -1,1 +1,1 @@
-http://android-2516354a35aeebe8.homenet.telecomitalia.it:7778/acc
+http://host-002.homenet.telecomitalia.it:7778/acc
