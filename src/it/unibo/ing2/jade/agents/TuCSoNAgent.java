@@ -1,8 +1,10 @@
 package it.unibo.ing2.jade.agents;
 
+import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.In;
 import it.unibo.ing2.jade.operations.Out;
 import it.unibo.ing2.jade.operations.Out_s;
+import it.unibo.ing2.jade.operations.TucsonAction;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import it.unibo.ing2.jade.service.TuCSoNHelper;
 import it.unibo.ing2.jade.service.TuCSoNService;
@@ -10,9 +12,11 @@ import jade.core.Agent;
 import jade.core.ServiceException;
 import jade.core.behaviours.OneShotBehaviour;
 import alice.logictuple.LogicTuple;
+import alice.logictuple.exceptions.InvalidLogicTupleException;
 import alice.tucson.api.ITucsonOperation;
 import alice.tucson.api.TucsonOperationCompletionListener;
 import alice.tucson.api.TucsonTupleCentreId;
+import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
 import alice.tuplecentre.core.TupleCentreOperation;
 
 public class TuCSoNAgent extends Agent {
@@ -31,9 +35,28 @@ public class TuCSoNAgent extends Agent {
 		public void action() {
 			try {
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
-				helper.foo2();
-				helper.foo();
+//				helper.foo2();
+//				helper.foo();
+				helper.authenticate(myAgent);
+				TucsonOperationHandler handler = helper.getOperationHandler(myAgent);
+				
+				TucsonTupleCentreId tcid = new TucsonTupleCentreId("default","localhost","20504");
+				LogicTuple tuple = LogicTuple.parse("msg('Hello world')");
+				TucsonAction action = new Out(tcid, tuple);
+				handler.executeSynch(action, null);
 			} catch (ServiceException e) {
+				e.printStackTrace();
+			} catch (NoTucsonAuthenticationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TucsonInvalidTupleCentreIdException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvalidLogicTupleException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			

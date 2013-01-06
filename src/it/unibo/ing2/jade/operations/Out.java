@@ -14,12 +14,12 @@ public class Out extends TucsonOrdinaryAction {
 	}
 
 	@Override
-	protected ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout) throws Exception{
+	public ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout) throws Exception{
 		return acc.out(tcid, tuple, timeout);
 	}
 
 	@Override
-	protected ITucsonOperation executeAsynch(EnhancedAsynchACC acc,
+	public ITucsonOperation executeAsynch(EnhancedAsynchACC acc,
 			TucsonOperationCompletionListener listener) throws Exception {
 		return acc.out(tcid, tuple, listener);
 	}

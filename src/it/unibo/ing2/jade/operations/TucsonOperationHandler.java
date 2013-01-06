@@ -1,5 +1,7 @@
 package it.unibo.ing2.jade.operations;
 
+import jade.core.GenericCommand;
+import it.unibo.ing2.jade.service.TuCSoNService;
 import it.unibo.ing2.jade.service.TuCSoNSlice;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.ITucsonOperation;
@@ -8,11 +10,11 @@ import alice.tucson.api.TucsonOperationCompletionListener;
 public class TucsonOperationHandler {
 	
 	private EnhancedACC acc;
-	private TuCSoNSlice localSlice;
+	private TuCSoNService service;
 	
-	public TucsonOperationHandler(EnhancedACC acc, TuCSoNSlice localSlice){
+	public TucsonOperationHandler(EnhancedACC acc, TuCSoNService service){
 		this.acc = acc;
-		this.localSlice = localSlice;
+		this.service = service;
 	}
 	
 	public ITucsonOperation executeSynch(TucsonAction action, Long timeout) throws Exception{
@@ -20,7 +22,13 @@ public class TucsonOperationHandler {
 			//controlla permessi
 			System.out.println("Specification action");
 		}
-		return action.executeSynch(acc, timeout);
+		
+		GenericCommand cmd = new GenericCommand(TuCSoNSlice.EXECUTE_SYNCH, TuCSoNService.NAME, null);
+		cmd.addParam(action);
+		cmd.addParam(acc);
+		cmd.addParam(timeout);
+		ITucsonOperation result = (ITucsonOperation) service.submit(cmd);
+		return result;
 	}
 	
 	public ITucsonOperation executeAsynch(TucsonAction action, TucsonOperationCompletionListener listener) throws Exception {

@@ -14,13 +14,13 @@ public class In extends TucsonOrdinaryAction {
 	}
 
 	@Override
-	protected ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout)
+	public ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout)
 			throws Exception {
 		return acc.in(tcid, tuple, timeout);
 	}
 
 	@Override
-	protected ITucsonOperation executeAsynch(EnhancedAsynchACC acc,
+	public ITucsonOperation executeAsynch(EnhancedAsynchACC acc,
 			TucsonOperationCompletionListener listener) throws Exception {
 		return acc.in(tcid, tuple, listener);
 	}

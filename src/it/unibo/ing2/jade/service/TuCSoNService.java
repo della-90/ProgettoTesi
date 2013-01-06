@@ -4,6 +4,7 @@ import it.unibo.ing2.jade.coordination.TucsonAccManager;
 import it.unibo.ing2.jade.coordination.TucsonNodeUtility;
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.Out;
+import it.unibo.ing2.jade.operations.TucsonAction;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import it.unibo.ing2.jade.operations.TucsonOrdinaryAction;
 import it.unibo.ing2.jade.operations.TucsonSpecificationAction;
@@ -31,6 +32,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import alice.tucson.api.EnhancedACC;
+import alice.tucson.api.EnhancedSynchACC;
+import alice.tucson.api.ITucsonOperation;
 import alice.tucson.api.TucsonAgentId;
 import alice.tucson.api.TucsonMetaACC;
 import alice.tucson.api.TucsonTupleCentreId;
@@ -120,7 +123,13 @@ public class TuCSoNService extends BaseService {
 	@Override
 	public Filter getCommandFilter(boolean direction) {
 		if (direction == Filter.OUTGOING) {
-			return null;
+			return new Filter() {
+				@Override
+				protected boolean accept(VerticalCommand cmd) {
+					System.out.println("Required cmd = "+cmd.getName());
+					return super.accept(cmd);
+				}
+			};
 		} else {
 			return inFilter;
 		}
@@ -262,18 +271,7 @@ public class TuCSoNService extends BaseService {
 						"The agent does not hold an ACC");
 			}
 
-			// Ottengo un riferimento allo slice locale
-			TuCSoNSlice localSlice;
-			try {
-				localSlice = (TuCSoNSlice) getSlice(getLocalNode().getName());
-				return new TucsonOperationHandler(mAccManager.getAcc(agent),
-						localSlice);
-			} catch (ServiceException e) {
-				e.printStackTrace();
-			} catch (IMTPException e) {
-				// Should never happen; this is a local call
-			}
-			return null;
+			return new TucsonOperationHandler(mAccManager.getAcc(agent), TuCSoNService.this);
 		}
 
 	}
@@ -351,6 +349,19 @@ public class TuCSoNService extends BaseService {
 		public void consume(VerticalCommand cmd) {
 			String cmdName = cmd.getName();			
 			System.out.println(cmdName + " on CommandSourceSink!!!!!!!!!!!!!!");
+			if (cmdName.equals(TuCSoNSlice.EXECUTE_SYNCH)){
+				TucsonAction action = (TucsonAction) cmd.getParam(0);
+				EnhancedSynchACC acc = (EnhancedSynchACC) cmd.getParam(1);
+				Long timeout = (Long) cmd.getParam(2);
+				
+				try {
+					ITucsonOperation result = action.executeSynch(acc, timeout);
+					cmd.setReturnValue(result);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+			}
 		}
 
 	}

@@ -14,6 +14,6 @@ public abstract class TucsonAction {
 		this.tcid = tcid;
 	}
 	
-	protected abstract ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout) throws Exception;
-	protected abstract ITucsonOperation executeAsynch(EnhancedAsynchACC acc, TucsonOperationCompletionListener listener) throws Exception;
+	public abstract ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout) throws Exception;
+	public abstract ITucsonOperation executeAsynch(EnhancedAsynchACC acc, TucsonOperationCompletionListener listener) throws Exception;
 }
