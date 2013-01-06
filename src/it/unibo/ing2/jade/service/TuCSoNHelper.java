@@ -4,7 +4,6 @@ import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
 import jade.core.ServiceHelper;
-import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
 import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
@@ -83,8 +82,13 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public TucsonOperationHandler getOperationHandler(Agent agent) throws NoTucsonAuthenticationException;
 
-	
+	/*
+	 * FIXME Metodo di debug
+	 */
 	public void foo();
 	
+	/*
+	 * FIXME Metodo di debug
+	 */
 	public void foo2();
 }

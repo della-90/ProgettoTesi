@@ -21,6 +21,11 @@ import alice.tuplecentre.core.TupleCentreOperation;
 
 public class TuCSoNAgent extends Agent {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	protected void setup() {
 		super.setup();
@@ -43,7 +48,7 @@ public class TuCSoNAgent extends Agent {
 				TucsonTupleCentreId tcid = new TucsonTupleCentreId("default","localhost","20504");
 				LogicTuple tuple = LogicTuple.parse("msg('Hello world')");
 				TucsonAction action = new Out(tcid, tuple);
-				handler.executeSynch(action, null);
+//				handler.executeSynch(action, null);
 			} catch (ServiceException e) {
 				e.printStackTrace();
 			} catch (NoTucsonAuthenticationException e) {

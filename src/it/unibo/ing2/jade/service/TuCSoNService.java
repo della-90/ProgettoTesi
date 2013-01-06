@@ -32,26 +32,47 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import alice.tucson.api.EnhancedACC;
+import alice.tucson.api.EnhancedAsynchACC;
 import alice.tucson.api.EnhancedSynchACC;
 import alice.tucson.api.ITucsonOperation;
 import alice.tucson.api.TucsonAgentId;
 import alice.tucson.api.TucsonMetaACC;
+import alice.tucson.api.TucsonOperationCompletionListener;
 import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonGenericException;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
 import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
 
+@SuppressWarnings("unused")
 public class TuCSoNService extends BaseService {
 
+	/*
+	 * Il nome del servizio
+	 */
 	public static final String NAME = "it.unibo.ing2.jade.service.TuCSoN";
+
+	/*
+	 * L'helper del servizio
+	 */
 	private TuCSoNHelper mHelper = new TuCSoNHelperImpl();
+
+	/*
+	 * Gestisce gli acc posseduti dagli agenti
+	 */
 	private TucsonAccManager mAccManager = TucsonAccManager.getInstance();
+
+	/*
+	 * Contiene l'elenco di tutti i nomi associati ai tuple centres
+	 */
 	private Map<String, TucsonTupleCentreId> mTupleCentres = new LinkedHashMap<>();
-	private AgentContainer myContainer;
-	private static final String[] OWNED_COMMANDS = {
-		TuCSoNSlice.EXECUTE_SYNCH,
-		TuCSoNSlice.EXECUTE_ASYNCH,
-		TuCSoNSlice.FIND_TUPLE_CENTRE
+
+	/*
+	 * L'insieme dei comandi verticali che il servizio è in grado di soddisfare
+	 * autonomamente
+	 */
+	private static final String[] OWNED_COMMANDS = { TuCSoNSlice.EXECUTE_SYNCH,
+			TuCSoNSlice.EXECUTE_ASYNCH
+	// TuCSoNSlice.FIND_TUPLE_CENTRE
 	};
 
 	// The local slice for this service
@@ -59,7 +80,8 @@ public class TuCSoNService extends BaseService {
 
 	// The source and target sinks
 	private Sink sourceSink = new CommandSourceSink();
-	private Sink targetSink = new CommandTargetSink();
+	private Sink targetSink = new CommandTargetSink(); // Al momento non è
+														// utilizzato
 
 	// The outgoing filter for the service
 	private IncomingPrimitiveFilter inFilter = new IncomingPrimitiveFilter();
@@ -67,12 +89,6 @@ public class TuCSoNService extends BaseService {
 	@Override
 	public String getName() {
 		return NAME;
-	}
-
-	@Override
-	public void init(AgentContainer ac, Profile p) throws ProfileException {
-		super.init(ac, p);
-		myContainer = ac;
 	}
 
 	@Override
@@ -84,7 +100,7 @@ public class TuCSoNService extends BaseService {
 	public Slice getLocalSlice() {
 		return localSlice;
 	}
-	
+
 	@Override
 	public String[] getOwnedCommands() {
 		return OWNED_COMMANDS;
@@ -94,10 +110,12 @@ public class TuCSoNService extends BaseService {
 	public void boot(Profile p) throws ServiceException {
 		super.boot(p);
 
-		if (p.isMain()) {
-			System.out.println("Main container! Running TuCSoNSliceImpl");
-		}
+		/*
+		 * Questo è il punto adatto per interpretare parametri aggiuntivi del
+		 * servizio
+		 */
 
+		// FIXME Questo è stato introdotto per debug
 		try {
 			TucsonTupleCentreId tcid = new TucsonTupleCentreId("provaa");
 			mTupleCentres.put("prova", tcid);
@@ -115,6 +133,7 @@ public class TuCSoNService extends BaseService {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class getHorizontalInterface() {
 		return TuCSoNSlice.class;
@@ -123,18 +142,16 @@ public class TuCSoNService extends BaseService {
 	@Override
 	public Filter getCommandFilter(boolean direction) {
 		if (direction == Filter.OUTGOING) {
-			return new Filter() {
-				@Override
-				protected boolean accept(VerticalCommand cmd) {
-					System.out.println("Required cmd = "+cmd.getName());
-					return super.accept(cmd);
-				}
-			};
+			return null;
 		} else {
 			return inFilter;
 		}
 	}
 
+	/*
+	 * Un semplice filtro per le operazioni in ingresso (quelle eseguite dal
+	 * CommandSourceSink)
+	 */
 	private class IncomingPrimitiveFilter extends Filter {
 
 		@Override
@@ -160,6 +177,9 @@ public class TuCSoNService extends BaseService {
 
 	}
 
+	/*
+	 * L'implementazione del TuCSoNHelper
+	 */
 	private class TuCSoNHelperImpl implements TuCSoNHelper {
 
 		@Override
@@ -192,9 +212,10 @@ public class TuCSoNService extends BaseService {
 				TuCSoNSlice thisSlice = (TuCSoNSlice) getSlice(getLocalNode()
 						.getName());
 				TucsonOrdinaryAction action = new Out(null, null);
-//				thisSlice.executeSynch(action, null);
-				
-				GenericCommand cmd = new GenericCommand(TuCSoNSlice.EXECUTE_SYNCH, TuCSoNService.NAME, null);
+				// thisSlice.executeSynch(action, null);
+
+				GenericCommand cmd = new GenericCommand(
+						TuCSoNSlice.EXECUTE_SYNCH, TuCSoNService.NAME, null);
 				cmd.addParam(action);
 				cmd.addParam(null);
 				submit(cmd);
@@ -271,7 +292,8 @@ public class TuCSoNService extends BaseService {
 						"The agent does not hold an ACC");
 			}
 
-			return new TucsonOperationHandler(mAccManager.getAcc(agent), TuCSoNService.this);
+			return new TucsonOperationHandler(mAccManager.getAcc(agent),
+					TuCSoNService.this);
 		}
 
 	}
@@ -283,6 +305,7 @@ public class TuCSoNService extends BaseService {
 	 * @author Nicola
 	 * 
 	 */
+	@SuppressWarnings("serial")
 	private class ServiceComponent implements Service.Slice {
 
 		@Override
@@ -319,20 +342,6 @@ public class TuCSoNService extends BaseService {
 				}
 				break;
 
-			case TuCSoNSlice.H_EXECUTE_SYNCH:
-				System.out.println("[TuCSoNSlice] called executeSynch");
-
-				GenericCommand gCmd = new GenericCommand(
-						TuCSoNSlice.EXECUTE_SYNCH, TuCSoNService.NAME, null);
-				gCmd.addParam(cmd.getParam(0));
-				gCmd.addParam(cmd.getParam(1));
-				result = gCmd;
-				break;
-
-			case TuCSoNSlice.H_EXECUTE_ASYNCH:
-				System.out.println("[TuCSoNSlice] called executeAsynch");
-				break;
-
 			default:
 				System.out.println("[TuCSoNSlice] called " + cmdName);
 				break;
@@ -343,42 +352,53 @@ public class TuCSoNService extends BaseService {
 
 	}
 
+	/*
+	 * Classe interna che ha il compito di eseguire i comandi verticali
+	 * "interni", ovvero quelli gestiti direttamente dal servizio (quelli
+	 * inclusi nell'elenco OWNED_COMMANDS)
+	 */
 	private class CommandSourceSink implements Sink {
 
 		@Override
 		public void consume(VerticalCommand cmd) {
-			String cmdName = cmd.getName();			
-			System.out.println(cmdName + " on CommandSourceSink!!!!!!!!!!!!!!");
-			if (cmdName.equals(TuCSoNSlice.EXECUTE_SYNCH)){
+			String cmdName = cmd.getName();
+			if (cmdName.equals(TuCSoNSlice.EXECUTE_SYNCH)) {
 				TucsonAction action = (TucsonAction) cmd.getParam(0);
 				EnhancedSynchACC acc = (EnhancedSynchACC) cmd.getParam(1);
 				Long timeout = (Long) cmd.getParam(2);
-				
+
 				try {
 					ITucsonOperation result = action.executeSynch(acc, timeout);
 					cmd.setReturnValue(result);
 				} catch (Exception e) {
-					e.printStackTrace();
+					cmd.setReturnValue(e);
 				}
-				
+
+			} else if (cmdName.equals(TuCSoNSlice.EXECUTE_ASYNCH)) {
+				TucsonAction action = (TucsonAction) cmd.getParam(0);
+				EnhancedAsynchACC acc = (EnhancedAsynchACC) cmd.getParam(1);
+				TucsonOperationCompletionListener listener = (TucsonOperationCompletionListener) cmd
+						.getParam(2);
+
+				try {
+					ITucsonOperation result = action.executeAsynch(acc,
+							listener);
+					cmd.setReturnValue(result);
+				} catch (Exception e) {
+					cmd.setReturnValue(e);
+				}
 			}
 		}
 
 	}
 
+	/*
+	 * Classe interna che ha il compito di eseguire i comandi verticali generati
+	 * dal ServiceComponent (al momento nessuno)
+	 */
 	private class CommandTargetSink implements Sink {
-
 		@Override
-		public void consume(VerticalCommand cmd) {
-			String cmdName = cmd.getName();
-			System.out.println(cmd.getName() + " on CommandTargetSink");
-//			if (cmdName.equals(TuCSoNSlice.EXECUTE_SYNCH)) {
-//				System.out.println(cmd.getName() + " on CommandTargetSink");
-//			} else if (cmdName.equals(TuCSoNSlice.EXECUTE_ASYNCH)) {
-//				System.out.println(cmd.getName() + " on CommandTargetSink");
-//			}
-		}
-
+		public void consume(VerticalCommand cmd) {}
 	}
 
 }
