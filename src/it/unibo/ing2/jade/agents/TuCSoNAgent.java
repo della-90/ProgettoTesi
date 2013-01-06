@@ -31,6 +31,7 @@ public class TuCSoNAgent extends Agent {
 		public void action() {
 			try {
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
+				helper.foo2();
 				helper.foo();
 			} catch (ServiceException e) {
 				e.printStackTrace();

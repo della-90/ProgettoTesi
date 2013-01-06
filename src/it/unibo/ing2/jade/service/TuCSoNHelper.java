@@ -85,4 +85,6 @@ public interface TuCSoNHelper extends ServiceHelper {
 
 	
 	public void foo();
+	
+	public void foo2();
 }
