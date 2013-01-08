@@ -19,7 +19,7 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 			throws IMTPException, ServiceException {
 		System.out.println("[TuCSoNProxy] findTupleCentre");
 		// Creo il comando orizzontale
-		GenericCommand cmd = new GenericCommand(TuCSoNSlice.H_FINDTUPLECENTRE,
+		GenericCommand cmd = new GenericCommand(TuCSoNSlice.H_FINDTUCSONNODE,
 				TuCSoNService.NAME, null);
 		cmd.addParam(tupleCentreName);
 		Node node = getNode();

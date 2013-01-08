@@ -10,7 +10,7 @@ public interface TuCSoNSlice extends Slice {
 	/*
 	 * I seguenti sono i nomi dei comandi orizzontali 
 	 */
-	public static final String H_FINDTUPLECENTRE = "1";
+	public static final String H_FINDTUCSONNODE = "1";
 //	public static final String H_EXECUTE_SYNCH = "2";
 //	public static final String H_EXECUTE_ASYNCH = "3";
 	

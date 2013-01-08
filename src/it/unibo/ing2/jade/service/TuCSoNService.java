@@ -8,29 +8,26 @@ import it.unibo.ing2.jade.operations.TucsonAction;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import it.unibo.ing2.jade.operations.TucsonOrdinaryAction;
 import it.unibo.ing2.jade.operations.TucsonSpecificationAction;
+import jade.core.AID;
 import jade.core.Agent;
-import jade.core.AgentContainer;
 import jade.core.BaseService;
-import jade.core.ContainerID;
 import jade.core.Filter;
 import jade.core.GenericCommand;
 import jade.core.HorizontalCommand;
 import jade.core.IMTPException;
-import jade.core.MainContainer;
 import jade.core.Node;
-import jade.core.NotFoundException;
 import jade.core.Profile;
-import jade.core.ProfileException;
 import jade.core.Service;
 import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 import jade.core.Sink;
 import jade.core.VerticalCommand;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
+import alice.logictuple.LogicTuple;
+import alice.logictuple.exceptions.InvalidLogicTupleException;
 import alice.tucson.api.EnhancedACC;
 import alice.tucson.api.EnhancedAsynchACC;
 import alice.tucson.api.EnhancedSynchACC;
@@ -42,6 +39,9 @@ import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonGenericException;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
 import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
+import alice.tucson.api.exceptions.TucsonOperationNotPossibleException;
+import alice.tucson.api.exceptions.UnreachableNodeException;
+import alice.tuplecentre.api.exceptions.OperationTimeOutException;
 
 @SuppressWarnings("unused")
 public class TuCSoNService extends BaseService {
@@ -62,9 +62,20 @@ public class TuCSoNService extends BaseService {
 	private TucsonAccManager mAccManager = TucsonAccManager.getInstance();
 
 	/*
-	 * Contiene l'elenco di tutti i nomi associati ai tuple centres
+	 * Gestisce il mapping Agente-OperationHandler
 	 */
-	private Map<String, TucsonTupleCentreId> mTupleCentres = new LinkedHashMap<>();
+	private Map<AID, TucsonOperationHandler> mOperationHandlers = new HashMap<AID, TucsonOperationHandler>();
+
+	/**
+	 * Parametro booleano di avvio che permette di specificare se attivare o meno un nodo TuCSoN sull'host.
+	 * Di default è TRUE
+	 */
+	public static final String BOOT_TUCSON_NODE = "boot_tucson_node";
+
+	/*
+	 * Il tuple centre relativo alla mobilità di TuCSoN
+	 */
+	private TucsonTupleCentreId mobilityTC;
 
 	/*
 	 * L'insieme dei comandi verticali che il servizio è in grado di soddisfare
@@ -110,18 +121,115 @@ public class TuCSoNService extends BaseService {
 	public void boot(Profile p) throws ServiceException {
 		super.boot(p);
 
+		try {
+			mobilityTC = new TucsonTupleCentreId("mobility", "localhost",
+					"20504");
+		} catch (TucsonInvalidTupleCentreIdException e) {
+			// Should never be thrown
+			e.printStackTrace();
+		}
+
 		/*
 		 * Questo è il punto adatto per interpretare parametri aggiuntivi del
 		 * servizio
 		 */
+		boolean bootTucsonNode = p.getBooleanProperty(BOOT_TUCSON_NODE, true);
+		System.out.println("Boot tucson node? "+bootTucsonNode);
+		
+		// Se non è attivo un nodo tucson lo lancio
+		if (bootTucsonNode) {
+			try {
+				TucsonAgentId aid = new TucsonAgentId("tucsonService");
+				EnhancedSynchACC acc = TucsonMetaACC.getContext(aid);
 
-		// FIXME Questo è stato introdotto per debug
+				TucsonNodeUtility.startTucsonNode(20504);
+				System.out
+						.println("[TuCSoNService] TuCSoN node started on port 20504");
+				insertSpecificationTuples(acc);
+
+				acc.exit();
+			} catch (TucsonOperationNotPossibleException e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			} catch (TucsonInvalidAgentIdException e) {
+				// Should never be thrown
+				e.printStackTrace();
+			} catch (TucsonGenericException e) {
+				// TODO Auto-generated catch block
+				System.err.println("Cannot launch TuCSoN node");
+				e.printStackTrace();
+			}
+		} else {
+			// Tucson node già avviato
+		}
+	}
+
+	private boolean hasSpecificationTuples(EnhancedSynchACC acc)
+			throws TucsonOperationNotPossibleException {
+		LogicTuple event, guards, reaction;
+		// TODO implementare le logic tuples
+
 		try {
-			TucsonTupleCentreId tcid = new TucsonTupleCentreId("provaa");
-			mTupleCentres.put("prova", tcid);
-		} catch (TucsonInvalidTupleCentreIdException e) {
+			event = LogicTuple.parse("");
+			guards = LogicTuple.parse("");
+			reaction = LogicTuple.parse("");
+			ITucsonOperation op = acc.nop_s(mobilityTC, event, guards,
+					reaction, null);
+			if (op.isOperationCompleted()) {
+				if (op.isResultSuccess()) {
+					// Le specifiche non ci sono
+					System.out
+							.println("[TuCSoNService] TuCSoN node does not have mobility specification tuples... I am going to add them");
+					return false;
+				} else {
+					// Le specifiche ci sono
+					System.out
+							.println("[TuCSoNService] TuCSoN node has mobility specification tuples");
+					return true;
+				}
+			}
+		} catch (InvalidLogicTupleException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnreachableNodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OperationTimeOutException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return false;
+
+	}
+
+	private void insertSpecificationTuples(EnhancedSynchACC acc)
+			throws TucsonOperationNotPossibleException {
+		LogicTuple event, guards, reaction;
+		// TODO implementare le logic tuples
+		try {
+			event = LogicTuple.parse("out(msg(X))");
+			guards = LogicTuple.parse("(from_agent, completion)");
+			reaction = LogicTuple.parse("out(read(msg(X)))");
+			ITucsonOperation op = acc.out_s(mobilityTC, event, guards,
+					reaction, null);
+			if (op.isOperationCompleted()) {
+				System.out
+						.println("[TuCSoNService] Added TuCSoN mobility specification tuples");
+			} else {
+				System.err
+						.println("[TuCSoNService] Error on adding TuCSoN mobility specification tuples");
+			}
+		} catch (InvalidLogicTupleException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (OperationTimeOutException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnreachableNodeException e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
@@ -177,13 +285,43 @@ public class TuCSoNService extends BaseService {
 
 	}
 
+	private void doMove(Agent agent, TucsonTupleCentreId destination,
+			String mode) throws NoTucsonAuthenticationException,
+			UnreachableNodeException {
+		// TODO completare tutto il metodo
+
+		if (mode.equals(TuCSoNHelper.NONE)) {
+			// Non devo fare niente
+			return;
+		}
+
+		EnhancedSynchACC acc = mAccManager.getAcc(agent);
+		if (acc == null) {
+			throw new NoTucsonAuthenticationException(
+					"Authentication required for moving");
+		}
+
+		try {
+			String tupleBody = new String("wanna_move(agent(" + agent.getAID()
+					+ "), tuplecentres(" + mode + "), destination())");
+			LogicTuple tuple = LogicTuple.parse(tupleBody.toString());
+		} catch (InvalidLogicTupleException e) {
+			// Should be never thrown
+			e.printStackTrace();
+		}
+
+	}
+
 	/*
 	 * L'implementazione del TuCSoNHelper
 	 */
 	private class TuCSoNHelperImpl implements TuCSoNHelper {
 
+		private Agent myAgent;
+
 		@Override
-		public void init(Agent arg0) {
+		public void init(Agent agent) {
+			this.myAgent = agent;
 		}
 
 		@Override
@@ -224,6 +362,20 @@ public class TuCSoNService extends BaseService {
 			} catch (IMTPException e) {
 				e.printStackTrace();
 			}
+
+		}
+
+		@Override
+		public void doMove(TucsonTupleCentreId destination, String mode)
+				throws UnreachableNodeException,
+				NoTucsonAuthenticationException {
+			TuCSoNService.this.doMove(this.myAgent, destination, mode);
+		}
+
+		@Override
+		public void doClone(TucsonTupleCentreId destination, String mode)
+				throws UnreachableNodeException {
+			// TODO Auto-generated method stub
 
 		}
 
@@ -292,8 +444,16 @@ public class TuCSoNService extends BaseService {
 						"The agent does not hold an ACC");
 			}
 
-			return new TucsonOperationHandler(mAccManager.getAcc(agent),
-					TuCSoNService.this);
+			// Controllo se esiste già un OperationHandler per l'agente,
+			// altrimenti lo creo
+			TucsonOperationHandler operationHandler = mOperationHandlers
+					.get(agent.getAID());
+			if (operationHandler == null) {
+				operationHandler = new TucsonOperationHandler(
+						mAccManager.getAcc(agent), TuCSoNService.this);
+				mOperationHandlers.put(agent.getAID(), operationHandler);
+			}
+			return operationHandler;
 		}
 
 	}
@@ -329,17 +489,11 @@ public class TuCSoNService extends BaseService {
 			VerticalCommand result = null;
 			String cmdName = cmd.getName();
 			switch (cmdName) {
-			case TuCSoNSlice.H_FINDTUPLECENTRE:
+			case TuCSoNSlice.H_FINDTUCSONNODE:
 				System.out
-						.println("[TuCSoNSlice] called findTupleCentre with arg: "
+						.println("[TuCSoNSlice] called findTucsonNode with arg: "
 								+ cmd.getParam(0));
-				try {
-					String tsName = (String) cmd.getParam(0);
-					TucsonTupleCentreId tcid = mTupleCentres.get(tsName);
-					cmd.setReturnValue(tcid);
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
+
 				break;
 
 			default:
@@ -398,7 +552,8 @@ public class TuCSoNService extends BaseService {
 	 */
 	private class CommandTargetSink implements Sink {
 		@Override
-		public void consume(VerticalCommand cmd) {}
+		public void consume(VerticalCommand cmd) {
+		}
 	}
 
 }
