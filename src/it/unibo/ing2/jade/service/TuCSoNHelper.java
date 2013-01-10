@@ -4,6 +4,7 @@ import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
 import jade.core.ServiceHelper;
+import alice.logictuple.LogicTuple;
 import alice.tucson.api.TucsonTupleCentreId;
 import alice.tucson.api.exceptions.TucsonInvalidAgentIdException;
 import alice.tucson.api.exceptions.TucsonInvalidTupleCentreIdException;
@@ -19,13 +20,6 @@ public interface TuCSoNHelper extends ServiceHelper {
 
 	public final int TUCSON_PORT = 20504;
 	
-	/*
-	 * Costanti per la mobilità dei tuple centres
-	 */
-	public static final String ALL_TUPLE_CENTRES = "all";
-	public static final String ONLY_VISITED_TUPLE_CENTRES = "visited";
-	public static final String NONE = "none";
-
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC
 	 * (attualmente l'ACC pi&ugrave; avanzato).
@@ -137,10 +131,10 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public void foo2();
 
-	public void doMove(TucsonTupleCentreId destination, String mode)
+	public void doMove(String destinationNetId, String tupleTemplate, String[] tupleCentreNames)
 			throws UnreachableNodeException, NoTucsonAuthenticationException;
 
-	public void doClone(TucsonTupleCentreId destination, String mode)
+	public void doClone(TucsonTupleCentreId destination, String[] tupleCentreNames)
 			throws UnreachableNodeException, NoTucsonAuthenticationException;
 
 }

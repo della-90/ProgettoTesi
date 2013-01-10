@@ -84,4 +84,13 @@ public class TucsonOperationHandler {
 		mVisitedTupleCentres.toArray(array);
 		return array;
 	}
+	
+	public String[] getVisitedTupleCentreNames(){
+		String[] result = new String[mVisitedTupleCentres.size()];
+		int index = 0;
+		for(TucsonTupleCentreId tcid : mVisitedTupleCentres){
+			result[index++] = tcid.getName();
+		}
+		return result;
+	}
 }

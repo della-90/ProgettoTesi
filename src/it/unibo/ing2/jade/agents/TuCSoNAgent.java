@@ -1,5 +1,7 @@
 package it.unibo.ing2.jade.agents;
 
+import java.util.Arrays;
+
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.operations.In;
 import it.unibo.ing2.jade.operations.Out;
@@ -40,15 +42,28 @@ public class TuCSoNAgent extends Agent {
 		public void action() {
 			try {
 				TuCSoNHelper helper = (TuCSoNHelper) getHelper(TuCSoNService.NAME);
-//				helper.foo2();
-//				helper.foo();
-				helper.authenticate(myAgent);
-				TucsonOperationHandler handler = helper.getOperationHandler(myAgent);
 				
+				//Mi autentico
+				helper.authenticate(myAgent);
+				//Ottengo l'handler per effettuare le operazioni
+				TucsonOperationHandler handler = helper.getOperationHandler(myAgent);
+				//Creo la tupla
+				LogicTuple tuple = LogicTuple.parse("msg(helloworld)");
+				//Scelgo il TC di destinazione della tupla
 				TucsonTupleCentreId tcid = new TucsonTupleCentreId("default","localhost","20504");
-				LogicTuple tuple = LogicTuple.parse("msg('Hello world')");
+				//Scelgo l'operazione
 				TucsonAction action = new Out(tcid, tuple);
-//				handler.executeSynch(action, null);
+				//La eseguo
+				handler.executeSynch(action, null);
+				
+				tuple = LogicTuple.parse("mess(himan)");
+				action = new Out(tcid, tuple);
+				handler.executeSynch(action, null);
+				
+				String[] tupleCentreNames = handler.getVisitedTupleCentreNames();
+				System.out.println("Visited tuple centres: "+Arrays.toString(tupleCentreNames));
+				helper.doMove("localhost:20505", "msg(X)", tupleCentreNames);
+				
 			} catch (ServiceException e) {
 				e.printStackTrace();
 			} catch (NoTucsonAuthenticationException e) {
