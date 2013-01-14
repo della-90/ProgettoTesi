@@ -62,7 +62,7 @@ public class TuCSoNAgent extends Agent {
 				
 				String[] tupleCentreNames = handler.getVisitedTupleCentreNames();
 				System.out.println("Visited tuple centres: "+Arrays.toString(tupleCentreNames));
-				helper.doMove("localhost:20505", "msg(X)", tupleCentreNames);
+				helper.doMove("merci", "msg(X)", tupleCentreNames);
 				
 			} catch (ServiceException e) {
 				e.printStackTrace();

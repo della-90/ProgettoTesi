@@ -179,6 +179,11 @@ public class TuCSoNService extends BaseService {
 			}
 		}
 
+		/*
+		 * TODO: rimuovere questa parte
+		 */
+		InetSocketAddress addr = new InetSocketAddress("localhost", 20505);
+		mTucsonNodes.put("merci", addr);
 	}
 
 	@Override
@@ -233,7 +238,7 @@ public class TuCSoNService extends BaseService {
 		try {
 			event = LogicTuple.parse("out(wanna_move(Destination, TupleCentreName, Template))");
 			guards = LogicTuple.parse("(from_agent, completion)");
-			reaction = LogicTuple.parse("in(wanna_move(Destination, TupleCentreName, Template)), rd_all(Template, TupleList), Destination ? out(TupleList)");
+			reaction = LogicTuple.parse("in(wanna_move(Destination, TupleCentreName, Template)), rd_all(Template, TupleList), Destination ? out_all(TupleList)");
 			ITucsonOperation op = acc.out_s(mobilityTC, event, guards,reaction, null);
 
 			event = LogicTuple.parse("out(move_tuples(Destination, N))");
