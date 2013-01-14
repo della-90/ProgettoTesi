@@ -1,8 +1,10 @@
 package it.unibo.ing2.jade.service;
 
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
+import it.unibo.ing2.jade.exceptions.TucsonNodeNotFoundException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
+import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 import alice.logictuple.LogicTuple;
 import alice.tucson.api.TucsonTupleCentreId;
@@ -19,7 +21,7 @@ import alice.tucson.service.TucsonNodeService;
 public interface TuCSoNHelper extends ServiceHelper {
 
 	public final int TUCSON_PORT = 20504;
-	
+
 	/**
 	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC
 	 * (attualmente l'ACC pi&ugrave; avanzato).
@@ -126,15 +128,18 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public void foo();
 
-	/*
-	 * FIXME Metodo di debug
-	 */
-	public void foo2();
+	public void doMove(String destinationNetId, int portno,
+			String tupleTemplate, String[] tupleCentreNames)
+			throws UnreachableNodeException, NoTucsonAuthenticationException,
+			IllegalArgumentException;
 
-	public void doMove(String destinationNetId, String tupleTemplate, String[] tupleCentreNames)
-			throws UnreachableNodeException, NoTucsonAuthenticationException;
+	public void doMove(String nodeName, String tupleTemplate,
+			String[] tupleCentreNames) throws UnreachableNodeException,
+			NoTucsonAuthenticationException, ServiceException,
+			TucsonNodeNotFoundException;
 
-	public void doClone(TucsonTupleCentreId destination, String[] tupleCentreNames)
-			throws UnreachableNodeException, NoTucsonAuthenticationException;
+	public void doClone(TucsonTupleCentreId destination,
+			String[] tupleCentreNames) throws UnreachableNodeException,
+			NoTucsonAuthenticationException;
 
 }

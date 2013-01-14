@@ -3,6 +3,7 @@ package it.unibo.ing2.jade.service;
 import it.unibo.ing2.jade.coordination.TucsonAccManager;
 import it.unibo.ing2.jade.coordination.TucsonNodeUtility;
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
+import it.unibo.ing2.jade.exceptions.TucsonNodeNotFoundException;
 import it.unibo.ing2.jade.operations.Out;
 import it.unibo.ing2.jade.operations.TucsonAction;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
@@ -23,6 +24,9 @@ import jade.core.ServiceHelper;
 import jade.core.Sink;
 import jade.core.VerticalCommand;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,6 +72,11 @@ public class TuCSoNService extends BaseService {
 	 * Gestisce il mapping Agente-OperationHandler
 	 */
 	private Map<AID, TucsonOperationHandler> mOperationHandlers = new HashMap<AID, TucsonOperationHandler>();
+	
+	/*
+	 * Gestisce il mapping nodeName-InetAddress
+	 */
+	private Map<String, InetSocketAddress> mTucsonNodes = new HashMap<>();
 
 	/**
 	 * Parametro booleano di avvio che permette di specificare se attivare o
@@ -301,7 +310,7 @@ public class TuCSoNService extends BaseService {
 	}
 
 	private void doMove(Agent agent, String tupleTemplate,
-			String destinationNetId, String[] tupleCentreNames)
+			String destinationNetId, int portno, String[] tupleCentreNames)
 			throws NoTucsonAuthenticationException, UnreachableNodeException {
 		// TODO completare tutto il metodo
 		System.err.println("Required doMove");
@@ -319,7 +328,7 @@ public class TuCSoNService extends BaseService {
 		for (int i = 0; i < tupleCentreNames.length; i++) {
 			try {
 				 String tupleBody = new String("wanna_move(" +
-						 tupleCentreNames[i] +" @ "+destinationNetId +","+
+						 tupleCentreNames[i] +" @ "+destinationNetId+":"+portno+","+
 						 tupleCentreNames[i] +","+
 						 tupleTemplate +
 				 ")");
@@ -360,7 +369,7 @@ public class TuCSoNService extends BaseService {
 				// Ottengo lo slice principale
 				TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
 				// ed eseguo su esso l'operazione
-				TucsonTupleCentreId tcid = mainSlice.findTupleCentre("prova");
+				InetSocketAddress tcid = mainSlice.findTupleCentre("prova");
 				System.out.println("[foo] found: " + tcid);
 			} catch (ServiceException e) {
 				e.printStackTrace();
@@ -371,36 +380,38 @@ public class TuCSoNService extends BaseService {
 		}
 
 		@Override
-		public void foo2() {
-			try {
-				/*
-				 * Ottengo lo slice locale; l'operazione non deve essere
-				 * eseguita per forza sul main slice
-				 */
-				TuCSoNSlice thisSlice = (TuCSoNSlice) getSlice(getLocalNode()
-						.getName());
-				TucsonOrdinaryAction action = new Out(null, null);
-				// thisSlice.executeSynch(action, null);
+		public void doMove(String destinationNetId, int portno, String tupleTemplate,
+				String[] tupleCentreNames) throws UnreachableNodeException,
+				NoTucsonAuthenticationException, IllegalArgumentException {
+			if (portno<= 0 || portno>65535){
+				throw new IllegalArgumentException("Port number +"+portno+" is not valid");
+			}
+			
+			TuCSoNService.this.doMove(this.myAgent, tupleTemplate,
+					destinationNetId, portno, tupleCentreNames);
+		}
+		
+		@Override
+		public void doMove(String nodeName, String tupleTemplate,
+				String[] tupleCentreNames) throws UnreachableNodeException,
+				NoTucsonAuthenticationException, ServiceException, TucsonNodeNotFoundException {
 
-				GenericCommand cmd = new GenericCommand(
-						TuCSoNSlice.EXECUTE_SYNCH, TuCSoNService.NAME, null);
-				cmd.addParam(action);
-				cmd.addParam(null);
-				submit(cmd);
-			} catch (ServiceException e) {
-				e.printStackTrace();
+			TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+			try {
+				Object result = mainSlice.findTupleCentre(nodeName);
+				if (result instanceof Throwable){
+					throw (TucsonNodeNotFoundException) result;
+				}
+				
+				InetSocketAddress addr = (InetSocketAddress) result;
+				String ip = addr.getAddress().getHostAddress();
+				int portno = addr.getPort();
+				this.doMove(ip, portno, tupleTemplate, tupleCentreNames);
 			} catch (IMTPException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
-		}
-
-		@Override
-		public void doMove(String destinationNetId, String tupleTemplate,
-				String[] tupleCentreNames) throws UnreachableNodeException,
-				NoTucsonAuthenticationException {
-			TuCSoNService.this.doMove(this.myAgent, tupleTemplate,
-					destinationNetId, tupleCentreNames);
+			
 		}
 
 		@Override
@@ -521,15 +532,12 @@ public class TuCSoNService extends BaseService {
 			String cmdName = cmd.getName();
 			switch (cmdName) {
 			case TuCSoNSlice.H_FINDTUCSONNODE:
-				System.out
-						.println("[TuCSoNSlice] called findTucsonNode with arg: "
-								+ cmd.getParam(0));
+				
+				String nodeName = (String) cmd.getParam(0);
 
-				break;
-
-			default:
-				System.out.println("[TuCSoNSlice] called " + cmdName);
-				break;
+				InetSocketAddress addr = mTucsonNodes.get(nodeName);
+				cmd.setReturnValue(addr);
+				break; 
 			}
 
 			return result;

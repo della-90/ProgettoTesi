@@ -1,5 +1,7 @@
 package it.unibo.ing2.jade.service;
 
+import java.net.InetSocketAddress;
+
 import jade.core.IMTPException;
 import jade.core.Service.Slice;
 import jade.core.ServiceException;
@@ -24,7 +26,7 @@ public interface TuCSoNSlice extends Slice {
 	/*
 	 * I seguenti sono i metodi associati ai comandi orizzontali
 	 */
-	public TucsonTupleCentreId findTupleCentre(String tupleCentreName) throws IMTPException, ServiceException;
+	public InetSocketAddress findTupleCentre(String tupleCentreName) throws IMTPException, ServiceException;
 	
 	//I seguenti non sono comandi orizzontali!!
 //	public void executeSynch(TucsonAction action, Long timeout) throws ServiceException, IMTPException;

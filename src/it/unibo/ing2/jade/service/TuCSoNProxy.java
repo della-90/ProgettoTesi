@@ -1,5 +1,9 @@
 package it.unibo.ing2.jade.service;
 
+import it.unibo.ing2.jade.exceptions.TucsonNodeNotFoundException;
+
+import java.net.InetSocketAddress;
+
 import jade.core.GenericCommand;
 import jade.core.IMTPException;
 import jade.core.Node;
@@ -15,7 +19,7 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public TucsonTupleCentreId findTupleCentre(String tupleCentreName)
+	public InetSocketAddress findTupleCentre(String tupleCentreName)
 			throws IMTPException, ServiceException {
 		System.out.println("[TuCSoNProxy] findTupleCentre");
 		// Creo il comando orizzontale
@@ -25,8 +29,13 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 		Node node = getNode();
 		Object result = node.accept(cmd);
 
+		if (result == null) {
+			//TODO creare un'eccezione più significativa (es TucsonNodeNotFoundException)
+			result = new TucsonNodeNotFoundException("No tucson node with name "+tupleCentreName);
+		}
+		
 		// restituisco il risultato
-		return (TucsonTupleCentreId) result;
+		return (InetSocketAddress) result;
 	}
 
 //	@Override
