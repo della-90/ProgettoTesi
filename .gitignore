@@ -8,3 +8,6 @@
 # Documentation
 doc/
 
+# Mac files
+.DS_Store
+
