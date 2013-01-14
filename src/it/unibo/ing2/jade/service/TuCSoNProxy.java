@@ -19,7 +19,7 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public InetSocketAddress findTupleCentre(String tupleCentreName)
+	public Object findTupleCentre(String tupleCentreName)
 			throws IMTPException, ServiceException {
 		System.out.println("[TuCSoNProxy] findTupleCentre");
 		// Creo il comando orizzontale
@@ -35,7 +35,7 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 		}
 		
 		// restituisco il risultato
-		return (InetSocketAddress) result;
+		return result;
 	}
 
 //	@Override

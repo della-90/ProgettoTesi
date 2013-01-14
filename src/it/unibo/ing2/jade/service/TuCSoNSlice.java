@@ -26,7 +26,7 @@ public interface TuCSoNSlice extends Slice {
 	/*
 	 * I seguenti sono i metodi associati ai comandi orizzontali
 	 */
-	public InetSocketAddress findTupleCentre(String tupleCentreName) throws IMTPException, ServiceException;
+	public Object findTupleCentre(String tupleCentreName) throws IMTPException, ServiceException;
 	
 	//I seguenti non sono comandi orizzontali!!
 //	public void executeSynch(TucsonAction action, Long timeout) throws ServiceException, IMTPException;

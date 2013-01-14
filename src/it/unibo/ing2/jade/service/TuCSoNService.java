@@ -374,7 +374,7 @@ public class TuCSoNService extends BaseService {
 				// Ottengo lo slice principale
 				TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
 				// ed eseguo su esso l'operazione
-				InetSocketAddress tcid = mainSlice.findTupleCentre("prova");
+				Object tcid = mainSlice.findTupleCentre("prova");
 				System.out.println("[foo] found: " + tcid);
 			} catch (ServiceException e) {
 				e.printStackTrace();
