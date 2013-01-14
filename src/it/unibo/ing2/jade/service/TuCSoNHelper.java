@@ -142,4 +142,5 @@ public interface TuCSoNHelper extends ServiceHelper {
 			String[] tupleCentreNames) throws UnreachableNodeException,
 			NoTucsonAuthenticationException;
 
+	public void addTupleCentreName(String tcName, String netId, int portno) throws IllegalArgumentException;
 }

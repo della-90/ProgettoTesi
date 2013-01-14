@@ -23,7 +23,10 @@ import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 import jade.core.Sink;
 import jade.core.VerticalCommand;
+import jade.tools.sniffer.MMCanvas;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
@@ -84,6 +87,12 @@ public class TuCSoNService extends BaseService {
 	 */
 	public static final String BOOT_TUCSON_NODE = "boot_tucson_node";
 
+	/**
+	 * Parametro di tipo Stringa che consente di specificare il nome di un file
+	 * all'interno del quale &egrave; possibile specificare tutte le associazioni
+	 * tupleCentreName-NetId
+	 */
+	public static final String TUCSON_NODE_BINDINGS = "tucson_node_bindings";
 	/*
 	 * Il tuple centre relativo alla mobilità di TuCSoN
 	 */
@@ -150,6 +159,17 @@ public class TuCSoNService extends BaseService {
 		boolean bootTucsonNode = p.getBooleanProperty(BOOT_TUCSON_NODE, true);
 		System.out.println("Boot tucson node? " + bootTucsonNode);
 
+		String filePath = p.getParameter(TUCSON_NODE_BINDINGS, null);
+		if (filePath != null) {
+			try {
+				Map<String, InetSocketAddress> mappings = TucsonBindingsParser.parse(filePath);
+				mTucsonNodes.putAll(mappings);
+			} catch (FileNotFoundException e) {
+				System.err.println("[TuCSoNService] File "+filePath+" not found!");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		// Se non è attivo un nodo tucson lo lancio
 		if (bootTucsonNode) {
 
@@ -163,6 +183,7 @@ public class TuCSoNService extends BaseService {
 				 * TODO: dato che il TucsonNode è su un altro thread, non c'è garanzia che la seguente
 				 * chiamata venga fatta DOPO che il TucsonNode sia effettivamente avviato
 				 */
+				Thread.sleep(2000);
 				insertSpecificationTuples(acc);
 
 				acc.exit();
@@ -176,14 +197,10 @@ public class TuCSoNService extends BaseService {
 				// TODO Auto-generated catch block
 				System.err.println("Cannot launch TuCSoN node");
 				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// Should never be thrown
 			}
 		}
-
-		/*
-		 * TODO: rimuovere questa parte
-		 */
-		InetSocketAddress addr = new InetSocketAddress("localhost", 20505);
-		mTucsonNodes.put("merci", addr);
 	}
 
 	@Override
@@ -195,39 +212,28 @@ public class TuCSoNService extends BaseService {
 
 	private boolean hasSpecificationTuples(EnhancedSynchACC acc)
 			throws TucsonOperationNotPossibleException {
-		LogicTuple event, guards, reaction;
-		// TODO implementare le logic tuples
-		//
-		// try {
-		// event = LogicTuple.parse("");
-		// guards = LogicTuple.parse("");
-		// reaction = LogicTuple.parse("");
-		// ITucsonOperation op = acc.nop_s(mobilityTC, event, guards,
-		// reaction, null);
-		// if (op.isOperationCompleted()) {
-		// if (op.isResultSuccess()) {
-		// // Le specifiche non ci sono
-		// System.out
-		// .println("[TuCSoNService] TuCSoN node does not have mobility specification tuples... I am going to add them");
-		// return false;
-		// } else {
-		// // Le specifiche ci sono
-		// System.out
-		// .println("[TuCSoNService] TuCSoN node has mobility specification tuples");
-		// return true;
-		// }
-		// }
-		// } catch (InvalidLogicTupleException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (UnreachableNodeException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// } catch (OperationTimeOutException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
-		return false;
+		LogicTuple event, guard, reaction;
+		boolean hasTuples = true;
+		for (int i=0; i < SpecificationTuples.events.length; i++) {
+			event = SpecificationTuples.events[i];
+			guard = SpecificationTuples.guards[i];
+			reaction = SpecificationTuples.reactions[i];
+			
+			try {
+				ITucsonOperation op = acc.no_s(mobilityTC, event, guard, reaction, null);
+				if (op.isResultSuccess()){
+					hasTuples = false;
+					break;
+				}
+			} catch (UnreachableNodeException e) {
+				//Should never be thrown
+				e.printStackTrace();
+			} catch (OperationTimeOutException e) {
+				//Should never be thrown
+				e.printStackTrace();
+			}
+		}
+		return hasTuples;
 
 	}
 
@@ -236,22 +242,30 @@ public class TuCSoNService extends BaseService {
 		//TODO finire di implementare le logic tuples e le out_s
 		LogicTuple event, guards, reaction;
 		try {
-			event = LogicTuple.parse("out(wanna_move(Destination, TupleCentreName, Template))");
-			guards = LogicTuple.parse("(from_agent, completion)");
-			reaction = LogicTuple.parse("in(wanna_move(Destination, TupleCentreName, Template)), rd_all(Template, TupleList), Destination ? out_all(TupleList)");
-			ITucsonOperation op = acc.out_s(mobilityTC, event, guards,reaction, null);
-
-			event = LogicTuple.parse("out(move_tuples(Destination, N))");
-			guards = LogicTuple.parse("completion, success");
-			reaction = LogicTuple
-					.parse("( N>0, in(move_tuples(Destination, N)), in(Tuple), Destination ? out(Tuple), N2 is N-1, out(move_tuples(Destination, N2)) )");
+			
+			for (int i=0; i<SpecificationTuples.events.length; i++){
+				event = SpecificationTuples.events[i];
+				guards = SpecificationTuples.guards[i];
+				reaction = SpecificationTuples.reactions[i];
+				
+				acc.out_s(mobilityTC, event, guards, reaction, null);
+			}
+//			event = LogicTuple.parse("out(wanna_move(Destination, TupleCentreName, Template))");
+//			guards = LogicTuple.parse("(from_agent, completion)");
+//			reaction = LogicTuple.parse("in(wanna_move(Destination, TupleCentreName, Template)), rd_all(Template, TupleList), Destination ? out_all(TupleList)");
+//			ITucsonOperation op = acc.out_s(mobilityTC, event, guards,reaction, null);
+//			
+//			event = LogicTuple.parse("out(move_tuples(Destination, N))");
+//			guards = LogicTuple.parse("completion, success");
+//			reaction = LogicTuple
+//					.parse("( N>0, in(move_tuples(Destination, N)), in(Tuple), Destination ? out(Tuple), N2 is N-1, out(move_tuples(Destination, N2)) )");
 //			acc.out_s(mobilityTC, event, guards, reaction, null);
 
-			event = LogicTuple.parse("out(move_tuples(Destination, 0))");
-			guards = LogicTuple.parse("completion, success");
-			reaction = LogicTuple.parse("in(move_tuples(Destination, 0))");
+//			event = LogicTuple.parse("out(move_tuples(Destination, 0))");
+//			guards = LogicTuple.parse("completion, success");
+//			reaction = LogicTuple.parse("in(move_tuples(Destination, 0))");
 //			acc.out_s(mobilityTC, event, guards, reaction, null);
-		} catch (InvalidLogicTupleException | OperationTimeOutException e) {
+		} catch (OperationTimeOutException e) {
 			// Should never be thrown
 			e.printStackTrace();
 		} catch (UnreachableNodeException e) {
@@ -355,6 +369,10 @@ public class TuCSoNService extends BaseService {
 		}
 
 	}
+	
+	private InetSocketAddress addTupleCentreName(String tcName, InetSocketAddress addr){
+		return mTucsonNodes.put(tcName, addr);
+	}
 
 	/*
 	 * L'implementazione del TuCSoNHelper
@@ -381,6 +399,20 @@ public class TuCSoNService extends BaseService {
 			} catch (IMTPException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+		}
+		
+		@Override
+		public void addTupleCentreName(String tcName, String netId, int portno)
+				throws IllegalArgumentException {
+			InetSocketAddress addr = new InetSocketAddress(netId, portno);
+			InetSocketAddress result = TuCSoNService.this.addTupleCentreName(tcName, addr);
+			if (result != null){
+				System.out.println("[TuCSoNHelper] Old tuple centre "+tcName
+						+ " at address "+addr.getAddress().getHostAddress()+":"+addr.getPort()
+						+ " overwritten!");
+			} else {
+				System.out.println("[TuCSoNHelper] Added tuple centre with name "+tcName+" at address: "+netId+":"+portno);
 			}
 		}
 
