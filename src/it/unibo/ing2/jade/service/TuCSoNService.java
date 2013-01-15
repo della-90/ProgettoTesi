@@ -92,7 +92,7 @@ public class TuCSoNService extends BaseService {
 	 * all'interno del quale &egrave; possibile specificare tutte le associazioni
 	 * tupleCentreName-NetId
 	 */
-	public static final String TUCSON_NODE_BINDINGS = "tucson_node_bindings";
+	public static final String TUCSON_NODE_MAPPINGS = "tucson_node_bindings";
 	/*
 	 * Il tuple centre relativo alla mobilità di TuCSoN
 	 */
@@ -159,10 +159,10 @@ public class TuCSoNService extends BaseService {
 		boolean bootTucsonNode = p.getBooleanProperty(BOOT_TUCSON_NODE, true);
 		System.out.println("Boot tucson node? " + bootTucsonNode);
 
-		String filePath = p.getParameter(TUCSON_NODE_BINDINGS, null);
+		String filePath = p.getParameter(TUCSON_NODE_MAPPINGS, null);
 		if (filePath != null) {
 			try {
-				Map<String, InetSocketAddress> mappings = TucsonBindingsParser.parse(filePath);
+				Map<String, InetSocketAddress> mappings = TucsonMappingsParser.parse(filePath);
 				mTucsonNodes.putAll(mappings);
 			} catch (FileNotFoundException e) {
 				System.err.println("[TuCSoNService] File "+filePath+" not found!");
