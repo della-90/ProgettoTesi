@@ -9,10 +9,12 @@ import alice.tucson.api.exceptions.TucsonGenericException;
 import alice.tucson.service.TucsonNodeService;
 
 public class TucsonNodeUtility {
-	
-	//TODO nella versione attuale non è ancora implementato questo metodo
-	public static boolean isTucsonNodeRunning(int port) {
-		boolean isInstalled = false;//TucsonNodeService.isInstalled();
+
+	private static TucsonNodeService tns;
+
+	// TODO nella versione attuale non è ancora implementato questo metodo
+	public static boolean isTucsonNodeRunning(int port) throws IOException {
+		boolean isInstalled = TucsonNodeService.isInstalled(port);
 		if (!isInstalled) {
 			SocketAddress addr = new InetSocketAddress(port);
 			try {
@@ -25,22 +27,32 @@ public class TucsonNodeUtility {
 		}
 		return isInstalled;
 	}
-	
-	public static void startTucsonNode(int port) throws TucsonGenericException{
-		if (isTucsonNodeRunning(port)){
-			return;
+
+	public synchronized static void startTucsonNode(int port)
+			throws TucsonGenericException {
+		try {
+			if (isTucsonNodeRunning(port)) {
+				return;
+			}
+		} catch (IOException e) {
+			System.err.println("[TucsonNodeUtility]: "+e);
+			e.printStackTrace();
 		}
-		
-		TucsonNodeService tns = new TucsonNodeService(port);
+
+		tns = new TucsonNodeService(port);
 		tns.install();
 	}
-	
-	public static void stopTucsonNode(int port) {
-		if (!isTucsonNodeRunning(port)){
-			return;
+
+	public synchronized static void stopTucsonNode(int port) {
+		try {
+			if (!isTucsonNodeRunning(port)) {
+				return;
+			}
+		} catch (IOException e) {
+			System.err.println("[TucsonNodeUtility]: "+e);
+			e.printStackTrace();
 		}
-		// TODO nella versione attuale non è ancora implementato questo metodo
-//		TucsonNodeService.getInstance().shutdown();
+		tns.shutdown();
 	}
 
 }

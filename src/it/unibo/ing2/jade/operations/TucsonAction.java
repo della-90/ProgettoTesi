@@ -19,7 +19,6 @@ public abstract class TucsonAction {
 		return tcid;
 	}
 	
-	//FIXME: in teoria questi due metodi non dovrebbero essere pubblici! O forse si?
 	public abstract ITucsonOperation executeSynch(EnhancedSynchACC acc, Long timeout) throws Exception;
 	public abstract ITucsonOperation executeAsynch(EnhancedAsynchACC acc, TucsonOperationCompletionListener listener) throws Exception;
 }

@@ -1,5 +1,7 @@
 package it.unibo.ing2.jade.service;
 
+import java.io.IOException;
+
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.exceptions.TucsonNodeNotFoundException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
@@ -107,7 +109,7 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 *            La porta del TucsonNodeService.
 	 * @return True se il nodo &egrave; attivo, false altrimenti.
 	 */
-	public boolean isTucsonNodeRunning(int port);
+	public boolean isTucsonNodeRunning(int port) throws IOException;
 
 	/**
 	 * Permette di ottenere il {@link TucsonOperationHandler} tramite il quale
@@ -122,11 +124,6 @@ public interface TuCSoNHelper extends ServiceHelper {
 	 */
 	public TucsonOperationHandler getOperationHandler(Agent agent)
 			throws NoTucsonAuthenticationException;
-
-	/*
-	 * FIXME Metodo di debug
-	 */
-	public void foo();
 
 	public void doMove(String destinationNetId, int portno,
 			String tupleTemplate, String[] tupleCentreNames)

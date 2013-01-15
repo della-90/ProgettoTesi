@@ -67,16 +67,12 @@ public class TuCSoNAgent extends Agent {
 			} catch (ServiceException e) {
 				e.printStackTrace();
 			} catch (NoTucsonAuthenticationException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (TucsonInvalidTupleCentreIdException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (InvalidLogicTupleException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			

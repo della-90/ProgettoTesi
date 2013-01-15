@@ -174,8 +174,10 @@ public class TuCSoNService extends BaseService {
 		if (bootTucsonNode) {
 
 			try {
+				//Lancio il nodo
 				TucsonNodeUtility.startTucsonNode(20504);
-				TucsonNodeService node;
+				
+				//Inserisco le tuple di specifica
 				TucsonAgentId aid = new TucsonAgentId("tucsonService");
 				EnhancedSynchACC acc = TucsonMetaACC.getContext(aid);
 				System.out.println("[TuCSoNService] TuCSoN node started on port 20504");
@@ -184,21 +186,22 @@ public class TuCSoNService extends BaseService {
 				 * chiamata venga fatta DOPO che il TucsonNode sia effettivamente avviato
 				 */
 				Thread.sleep(2000);
+				
 				insertSpecificationTuples(acc);
-
+				//Rilascio ACC
 				acc.exit();
 			} catch (TucsonOperationNotPossibleException e) {
-				// TODO: handle exception
+				System.err.println("[TuCSoNService] "+e);
 				e.printStackTrace();
 			} catch (TucsonInvalidAgentIdException e) {
 				// Should never be thrown
+				System.err.println("[TuCSoNService]: "+e);
 				e.printStackTrace();
 			} catch (TucsonGenericException e) {
-				// TODO Auto-generated catch block
-				System.err.println("Cannot launch TuCSoN node");
+				System.err.println("[TuCSoNService]: Cannot launch TuCSoN node! "+e);
 				e.printStackTrace();
 			} catch (InterruptedException e) {
-				// Should never be thrown
+				// TODO: sostituire la Thread.sleep con qualcosa di più appropriato
 			}
 		}
 	}
@@ -239,7 +242,6 @@ public class TuCSoNService extends BaseService {
 
 	private void insertSpecificationTuples(EnhancedSynchACC acc)
 			throws TucsonOperationNotPossibleException {
-		//TODO finire di implementare le logic tuples e le out_s
 		LogicTuple event, guards, reaction;
 		try {
 			
@@ -267,9 +269,14 @@ public class TuCSoNService extends BaseService {
 //			acc.out_s(mobilityTC, event, guards, reaction, null);
 		} catch (OperationTimeOutException e) {
 			// Should never be thrown
+			System.err.println("[TuCSoNService]: "+e);
 			e.printStackTrace();
 		} catch (UnreachableNodeException e) {
-			// TODO: handle exception
+			/*
+			 * Il tuple centre mobilityTC si trova su un nodo locale, per cui non può
+			 * essere irraggiungibile
+			 */
+			System.err.println("[TuCSoNService]: Errore nell'inserimento delle tuple di specifica nel nodo locale! "+e);
 			e.printStackTrace();
 		}
 
@@ -331,7 +338,7 @@ public class TuCSoNService extends BaseService {
 	private void doMove(Agent agent, String tupleTemplate,
 			String destinationNetId, int portno, String[] tupleCentreNames)
 			throws NoTucsonAuthenticationException, UnreachableNodeException {
-		// TODO completare tutto il metodo
+
 		System.err.println("Required doMove");
 		EnhancedSynchACC acc = mAccManager.getAcc(agent);
 		if (acc == null) {
@@ -351,7 +358,6 @@ public class TuCSoNService extends BaseService {
 						 tupleCentreNames[i] +","+
 						 tupleTemplate +
 				 ")");
-//				String tupleBody = "wanna_move(agent(agent), destination(default@localhost:20505), template(msg(X)))";
 				LogicTuple tuple = LogicTuple.parse(tupleBody);
 
 				// Eseguo la tupla direttamente dalle API TuCSoN
@@ -361,9 +367,10 @@ public class TuCSoNService extends BaseService {
 
 			} catch (InvalidLogicTupleException | OperationTimeOutException e) {
 				// Should be never thrown
+				System.err.println("[TuCSoNService]: "+e);
 				e.printStackTrace();
 			} catch (TucsonOperationNotPossibleException e) {
-				// TODO Auto-generated catch block
+				System.err.println("[TuCSoNService]: "+e);
 				e.printStackTrace();
 			}
 		}
@@ -384,22 +391,6 @@ public class TuCSoNService extends BaseService {
 		@Override
 		public void init(Agent agent) {
 			this.myAgent = agent;
-		}
-
-		@Override
-		public void foo() {
-			try {
-				// Ottengo lo slice principale
-				TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
-				// ed eseguo su esso l'operazione
-				Object tcid = mainSlice.findTupleCentre("prova");
-				System.out.println("[foo] found: " + tcid);
-			} catch (ServiceException e) {
-				e.printStackTrace();
-			} catch (IMTPException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 		
 		@Override
@@ -511,7 +502,7 @@ public class TuCSoNService extends BaseService {
 		}
 
 		@Override
-		public boolean isTucsonNodeRunning(int port) {
+		public boolean isTucsonNodeRunning(int port) throws IOException {
 			return TucsonNodeUtility.isTucsonNodeRunning(port);
 		}
 
@@ -553,8 +544,7 @@ public class TuCSoNService extends BaseService {
 				return TuCSoNService.this.getLocalNode();
 			} catch (IMTPException e) {
 				// Should never happen; this is a local call
-				throw new ServiceException(
-						"Unexpected error on retrieving local node");
+				throw new ServiceException("Unexpected error on retrieving local node");
 			}
 		}
 

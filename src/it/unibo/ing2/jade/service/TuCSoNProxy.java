@@ -30,7 +30,6 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 		Object result = node.accept(cmd);
 
 		if (result == null) {
-			//TODO creare un'eccezione più significativa (es TucsonNodeNotFoundException)
 			result = new TucsonNodeNotFoundException("No tucson node with name "+tupleCentreName);
 		}
 		
