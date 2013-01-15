@@ -135,9 +135,15 @@ public interface TuCSoNHelper extends ServiceHelper {
 			NoTucsonAuthenticationException, ServiceException,
 			TucsonNodeNotFoundException;
 
-	public void doClone(TucsonTupleCentreId destination,
-			String[] tupleCentreNames) throws UnreachableNodeException,
-			NoTucsonAuthenticationException;
+	public void doClone(String destinationNetId, int portno,
+			String tupleTemplate, String[] tupleCentreNames) throws UnreachableNodeException,
+			NoTucsonAuthenticationException, IllegalArgumentException;
 
-	public void addTupleCentreName(String tcName, String netId, int portno) throws IllegalArgumentException;
+	public void doClone(String nodeName, String tupleTemplate,
+			String[] tupleCentreNames) throws UnreachableNodeException,
+			NoTucsonAuthenticationException, ServiceException,
+			TucsonNodeNotFoundException;
+
+	public void addTupleCentreName(String tcName, String netId, int portno)
+			throws IllegalArgumentException;
 }

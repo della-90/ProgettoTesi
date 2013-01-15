@@ -339,7 +339,6 @@ public class TuCSoNService extends BaseService {
 			String destinationNetId, int portno, String[] tupleCentreNames)
 			throws NoTucsonAuthenticationException, UnreachableNodeException {
 
-		System.err.println("Required doMove");
 		EnhancedSynchACC acc = mAccManager.getAcc(agent);
 		if (acc == null) {
 			throw new NoTucsonAuthenticationException(
@@ -347,7 +346,7 @@ public class TuCSoNService extends BaseService {
 		}
 
 		// Controllo tupleTemplate
-		if (tupleTemplate == null) {
+		if (tupleTemplate == null || tupleTemplate.trim().length() == 0) {
 			tupleTemplate = "X";
 		}
 
@@ -361,7 +360,7 @@ public class TuCSoNService extends BaseService {
 				LogicTuple tuple = LogicTuple.parse(tupleBody);
 
 				// Eseguo la tupla direttamente dalle API TuCSoN
-				System.err.println("[TuCSoNService] Doing out of tuple: "
+				System.out.println("[TuCSoNService] Doing out of tuple: "
 						+ tuple);
 				acc.out(mobilityTC, tuple, null);
 
@@ -375,6 +374,45 @@ public class TuCSoNService extends BaseService {
 			}
 		}
 
+	}
+	
+	private void doClone(Agent agent, String tupleTemplate, String destinationNetId, int portno,
+			String[] tupleCentreNames) throws NoTucsonAuthenticationException, UnreachableNodeException {
+		
+		EnhancedSynchACC acc = mAccManager.getAcc(agent);
+		if (acc == null) {
+			throw new NoTucsonAuthenticationException("Authentication required for cloning");
+		}
+		
+		//Controllo tupleTemplate
+		if (tupleTemplate == null || tupleTemplate.trim().length() == 0){
+			tupleTemplate = "X";
+		}
+		
+		for (int i=0; i<tupleCentreNames.length; i++) {
+			try {
+				String tupleBody = new String(
+						"wanna_clone(" +
+						tupleCentreNames[i] +"@"+destinationNetId+":"+portno+","+
+						tupleCentreNames[i] +","+
+						tupleTemplate + ")"
+						);
+				
+				LogicTuple tuple = LogicTuple.parse(tupleBody);
+				
+				System.out.println("[TuCSoNService] Doing out of tuple: "
+						+ tuple);
+				acc.out(mobilityTC, tuple, null);
+				
+			} catch (InvalidLogicTupleException | OperationTimeOutException e) {
+				// Should be never thrown
+				System.err.println("[TuCSoNService]: "+e);
+				e.printStackTrace();
+			} catch (TucsonOperationNotPossibleException e) {
+				System.err.println("[TuCSoNService]: "+e);
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private InetSocketAddress addTupleCentreName(String tcName, InetSocketAddress addr){
@@ -443,10 +481,41 @@ public class TuCSoNService extends BaseService {
 		}
 
 		@Override
-		public void doClone(TucsonTupleCentreId destination,
-				String[] tupleCentreNames) throws UnreachableNodeException {
-			// TODO Auto-generated method stub
-
+		public void doClone(String destinationNetId, int portno,
+				String tupleTemplate, String[] tupleCentreNames)
+				throws UnreachableNodeException,
+				NoTucsonAuthenticationException, IllegalArgumentException {
+			
+			if (portno<=0 || portno>65535){
+				throw new IllegalArgumentException("Port number +"+portno+" is not valid");
+			}
+			
+			TuCSoNService.this.doClone(this.myAgent, tupleTemplate, destinationNetId, portno, tupleCentreNames);
+			
+		}
+		
+		@Override
+		public void doClone(String nodeName, String tupleTemplate,
+				String[] tupleCentreNames) throws UnreachableNodeException,
+				NoTucsonAuthenticationException, ServiceException,
+				TucsonNodeNotFoundException {
+			
+			TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+			try {
+				Object result = mainSlice.findTupleCentre(nodeName);
+				if (result instanceof Throwable){
+					throw (TucsonNodeNotFoundException) result;
+				}
+				
+				InetSocketAddress addr = (InetSocketAddress) result;
+				String ip = addr.getAddress().getHostAddress();
+				int portno = addr.getPort();
+				this.doClone(ip, portno, tupleTemplate, tupleCentreNames);
+			} catch (IMTPException e){
+				//TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 
 		private EnhancedACC obtainAcc(Agent agent, String netid, int portno)
