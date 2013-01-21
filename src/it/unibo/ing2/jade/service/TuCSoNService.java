@@ -83,7 +83,7 @@ public class TuCSoNService extends BaseService {
 
 	/**
 	 * Parametro booleano di avvio che permette di specificare se attivare o
-	 * meno un nodo TuCSoN sull'host. Di default è TRUE
+	 * meno un nodo TuCSoN sull'host. Di default è FALSE
 	 */
 	public static final String BOOT_TUCSON_NODE = "boot_tucson_node";
 
@@ -92,7 +92,7 @@ public class TuCSoNService extends BaseService {
 	 * all'interno del quale &egrave; possibile specificare tutte le associazioni
 	 * tupleCentreName-NetId
 	 */
-	public static final String TUCSON_NODE_MAPPINGS = "tucson_node_bindings";
+	public static final String TUCSON_NODE_MAPPINGS = "tucson_node_mappings";
 	/*
 	 * Il tuple centre relativo alla mobilità di TuCSoN
 	 */
@@ -156,18 +156,23 @@ public class TuCSoNService extends BaseService {
 		 * Questo è il punto adatto per interpretare parametri aggiuntivi del
 		 * servizio
 		 */
-		boolean bootTucsonNode = p.getBooleanProperty(BOOT_TUCSON_NODE, true);
+		boolean bootTucsonNode = p.getBooleanProperty(BOOT_TUCSON_NODE, false);
 		System.out.println("Boot tucson node? " + bootTucsonNode);
 
-		String filePath = p.getParameter(TUCSON_NODE_MAPPINGS, null);
-		if (filePath != null) {
-			try {
-				Map<String, InetSocketAddress> mappings = TucsonMappingsParser.parse(filePath);
-				mTucsonNodes.putAll(mappings);
-			} catch (FileNotFoundException e) {
-				System.err.println("[TuCSoNService] File "+filePath+" not found!");
-			} catch (IOException e) {
-				e.printStackTrace();
+		/*
+		 * Se e' il main-container aggiungo i mappings, altrimenti li ignoro
+		 */
+		if (p.isMain()){
+			String filePath = p.getParameter(TUCSON_NODE_MAPPINGS, null);
+			if (filePath != null) {
+				try {
+					Map<String, InetSocketAddress> mappings = TucsonMappingsParser.parse(filePath);
+					mTucsonNodes.putAll(mappings);
+				} catch (FileNotFoundException e) {
+					System.err.println("[TuCSoNService] File "+filePath+" not found!");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		// Se non è attivo un nodo tucson lo lancio
@@ -463,6 +468,7 @@ public class TuCSoNService extends BaseService {
 				NoTucsonAuthenticationException, ServiceException, TucsonNodeNotFoundException {
 
 			TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+			System.out.println("[TuCSoNService] Main-Slice = "+mainSlice);
 			try {
 				Object result = mainSlice.findTupleCentre(nodeName);
 				if (result instanceof Throwable){
