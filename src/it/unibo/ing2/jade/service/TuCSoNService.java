@@ -534,6 +534,9 @@ public class TuCSoNService extends BaseService {
 		@Override
 		public void authenticate(Agent agent)
 				throws TucsonInvalidAgentIdException {
+			if (mAccManager.hasAcc(myAgent)){
+				return;
+			}
 			EnhancedACC acc = obtainAcc(agent);
 			mAccManager.addAcc(agent, acc);
 		}
@@ -541,13 +544,20 @@ public class TuCSoNService extends BaseService {
 		@Override
 		public void authenticate(Agent agent, String netid, int portno)
 				throws TucsonInvalidAgentIdException {
+			if (mAccManager.hasAcc(myAgent)){
+				return;
+			}
 			EnhancedACC acc = obtainAcc(agent, netid, portno);
 			mAccManager.addAcc(agent, acc);
 		}
 
 		@Override
 		public void deauthenticate(Agent agent) {
+			//Rimuovo l'ACC
 			mAccManager.removeAcc(agent);
+			
+			//Rimuovo eventuali TucsonOperationHandler
+			mOperationHandlers.remove(myAgent.getAID());
 		}
 
 		private EnhancedACC obtainAcc(Agent agent)
@@ -591,11 +601,9 @@ public class TuCSoNService extends BaseService {
 
 			// Controllo se esiste già un OperationHandler per l'agente,
 			// altrimenti lo creo
-			TucsonOperationHandler operationHandler = mOperationHandlers
-					.get(agent.getAID());
+			TucsonOperationHandler operationHandler = mOperationHandlers.get(agent.getAID());
 			if (operationHandler == null) {
-				operationHandler = new TucsonOperationHandler(
-						mAccManager.getAcc(agent), TuCSoNService.this);
+				operationHandler = new TucsonOperationHandler(mAccManager.getAcc(agent), TuCSoNService.this);
 				mOperationHandlers.put(agent.getAID(), operationHandler);
 			}
 			return operationHandler;
