@@ -32,6 +32,7 @@ public class TucsonOperationHandler {
 			System.out.println("Specification action");
 		}
 
+		//Creo il comando verticale
 		GenericCommand cmd = new GenericCommand(TuCSoNSlice.EXECUTE_SYNCH,
 				TuCSoNService.NAME, null);
 		cmd.addParam(action);
@@ -43,6 +44,12 @@ public class TucsonOperationHandler {
 		if (result instanceof Exception) {
 			throw (Exception) result;
 		}
+		
+		/*
+		 * Oppure eseguo direttamente l'azione
+		 * In questo caso i metodi executeSynch e executeAsynch possono essere protected
+		 */
+//		return action.executeSynch(acc, timeout);
 		
 		//Aggiungo il Tuple Centre all'elenco di tuple centres visitati
 		addTupleCentre(action);
@@ -56,6 +63,7 @@ public class TucsonOperationHandler {
 			System.out.println("Specification action");
 		}
 		
+		//Creo il comando verticale
 		GenericCommand cmd = new GenericCommand(TuCSoNSlice.EXECUTE_ASYNCH, TuCSoNService.NAME, null);
 		cmd.addParam(action);
 		cmd.addParam(acc);
@@ -66,6 +74,11 @@ public class TucsonOperationHandler {
 		if (result instanceof Exception){
 			throw (Exception) result;
 		}
+		
+		/*
+		 * Oppure eseguo direttamente l'azione
+		 */
+//		return action.executeAsynch(acc, listener);
 		
 		addTupleCentre(action);
 		return (ITucsonOperation) result;

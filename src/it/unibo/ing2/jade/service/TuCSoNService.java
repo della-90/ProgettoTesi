@@ -23,6 +23,7 @@ import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 import jade.core.Sink;
 import jade.core.VerticalCommand;
+import jade.core.behaviours.TickerBehaviour;
 import jade.tools.sniffer.MMCanvas;
 
 import java.io.FileNotFoundException;
@@ -420,8 +421,24 @@ public class TuCSoNService extends BaseService {
 		}
 	}
 	
-	private InetSocketAddress addTupleCentreName(String tcName, InetSocketAddress addr){
-		return mTucsonNodes.put(tcName, addr);
+	private void addTupleCentreName(String tcName, String netId, int portno) throws ServiceException, IMTPException, IllegalArgumentException{
+		TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+		mainSlice.addTupleCentre(tcName, netId, portno);
+	}
+	
+	private void removeTupleCentreName(String tcName) throws IMTPException, ServiceException {
+		TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+		mainSlice.removeTupleCentre(tcName);
+	}
+	
+	private InetSocketAddress findTupleCentre(String tcName) throws ServiceException, IMTPException, TucsonNodeNotFoundException {
+		TuCSoNSlice mainSlice = (TuCSoNSlice) getSlice(MAIN_SLICE);
+		Object result = mainSlice.findTupleCentre(tcName);
+		
+		if (result instanceof Throwable) {
+			throw (TucsonNodeNotFoundException) result;
+		}
+		return (InetSocketAddress) result;
 	}
 
 	/*
@@ -438,16 +455,18 @@ public class TuCSoNService extends BaseService {
 		
 		@Override
 		public void addTupleCentreName(String tcName, String netId, int portno)
-				throws IllegalArgumentException {
-			InetSocketAddress addr = new InetSocketAddress(netId, portno);
-			InetSocketAddress result = TuCSoNService.this.addTupleCentreName(tcName, addr);
-			if (result != null){
-				System.out.println("[TuCSoNHelper] Old tuple centre "+tcName
-						+ " at address "+addr.getAddress().getHostAddress()+":"+addr.getPort()
-						+ " overwritten!");
-			} else {
-				System.out.println("[TuCSoNHelper] Added tuple centre with name "+tcName+" at address: "+netId+":"+portno);
-			}
+				throws ServiceException, IllegalArgumentException, IMTPException {
+			TuCSoNService.this.addTupleCentreName(tcName, netId, portno);
+		}
+		
+		@Override
+		public void removeTupleCentreName(String tcName) throws IMTPException, ServiceException {
+			TuCSoNService.this.removeTupleCentreName(tcName);
+		}
+		
+		@Override
+		public InetSocketAddress findTupleCentre(String tcName) throws ServiceException, IMTPException, TucsonNodeNotFoundException {
+			return TuCSoNService.this.findTupleCentre(tcName);
 		}
 
 		@Override
@@ -640,14 +659,32 @@ public class TuCSoNService extends BaseService {
 		public VerticalCommand serve(HorizontalCommand cmd) {
 			VerticalCommand result = null;
 			String cmdName = cmd.getName();
+			
+			String nodeName = null;
+			InetSocketAddress addr = null;
 			switch (cmdName) {
 			case TuCSoNSlice.H_FINDTUCSONNODE:
 				
-				String nodeName = (String) cmd.getParam(0);
-
-				InetSocketAddress addr = mTucsonNodes.get(nodeName);
+				nodeName = (String) cmd.getParam(0);
+				addr = mTucsonNodes.get(nodeName);
+				
 				cmd.setReturnValue(addr);
 				break; 
+				
+			case TuCSoNSlice.H_ADDTUPLECENTRE:
+				
+				nodeName = (String) cmd.getParam(0);
+				addr = (InetSocketAddress) cmd.getParam(1);
+				
+				TuCSoNService.this.mTucsonNodes.put(nodeName, addr);
+				break;
+				
+			case TuCSoNSlice.H_REMOVETUPLECENTRE:
+				
+				nodeName = (String) cmd.getParam(0);
+				
+				TuCSoNService.this.mTucsonNodes.remove(nodeName);
+				break;
 			}
 
 			return result;

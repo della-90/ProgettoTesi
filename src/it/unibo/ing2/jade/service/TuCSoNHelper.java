@@ -1,11 +1,13 @@
 package it.unibo.ing2.jade.service;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 import it.unibo.ing2.jade.exceptions.NoTucsonAuthenticationException;
 import it.unibo.ing2.jade.exceptions.TucsonNodeNotFoundException;
 import it.unibo.ing2.jade.operations.TucsonOperationHandler;
 import jade.core.Agent;
+import jade.core.IMTPException;
 import jade.core.ServiceException;
 import jade.core.ServiceHelper;
 import alice.logictuple.LogicTuple;
@@ -25,42 +27,27 @@ public interface TuCSoNHelper extends ServiceHelper {
 	public final int TUCSON_PORT = 20504;
 
 	/**
-	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC
-	 * (attualmente l'ACC pi&ugrave; avanzato).
-	 * 
-	 * @param agent
-	 *            L'agente che richiede l'ACC.
-	 * @param netid
-	 *            L'ID del nodo TuCSoN (indirizzo IP oppure nome DNS)
-	 * @param portno
-	 *            Il numero di porta del nodo TuCSoN
-	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
-	 * @throws TucsonInvalidAgentIdException
-	 *             Se l'<code>aid</code> specificato non &egrave; ammissibile.
+	 * Permette di effettuare l'autenticazione per il nodo TuCSoN locale. Equivale a {@link #authenticate(Agent, String, int)} con i parametri
+	 * relativi al nodo locale.
+	 * @param agent L'agente che richiede l'autenticazione.
+	 * @throws TucsonInvalidAgentIdException Se il nome dell'agente non soddisfa i requisiti di TuCSoN.
 	 */
-	// public EnhancedACC obtainAcc(Agent agent, String netid, int portno)
-	// throws TucsonInvalidAgentIdException;
-
-	/**
-	 * Permette di ottenere un {@link alice.tucson.api.EnhancedACC} EnhancedACC
-	 * (attualmente l'ACC pi&ugrave; avanzato). Equivale a
-	 * {@link #obtainAcc(Agent, String, int)} con <code>netid</code> e
-	 * <code>portno</code> di default (localhost:20504)
-	 * 
-	 * @param agent
-	 *            L'agente che richiede l'ACC.
-	 * @return L'EnhancedACC associato al nodo TuCSoN specificato
-	 * @throws TucsonInvalidAgentIdException
-	 *             Se l'<code>aid</code> specificato non &egrave; ammissibile.
-	 */
-	// public EnhancedACC obtainAcc(Agent agent) throws
-	// TucsonInvalidAgentIdException;
-
 	public void authenticate(Agent agent) throws TucsonInvalidAgentIdException;
 
+	/**
+	 * Permette di effettuare l'autenticazione per il nodo TuCSoN specificato.
+	 * @param agent L'agente che richiede l'autenticazione.
+	 * @param netid L'indirizzo IP o nome DNS del nodo TuCSoN.
+	 * @param portno Il numero di porta del nodo TuCSoN.
+	 * @throws TucsonInvalidAgentIdException Se il nome dell'agente non soddisfa i requisiti di TuCSoN.
+	 */
 	public void authenticate(Agent agent, String netid, int portno)
 			throws TucsonInvalidAgentIdException;
 
+	/**
+	 * Permette di effettuare la deautenticazione per il nodo TuCSoN sul quale si era precedentemente autenticati.
+	 * @param agent L'agente che richiede la deautenticazione.
+	 */
 	public void deauthenticate(Agent agent);
 
 	/**
@@ -125,16 +112,36 @@ public interface TuCSoNHelper extends ServiceHelper {
 	public TucsonOperationHandler getOperationHandler(Agent agent)
 			throws NoTucsonAuthenticationException;
 
+	/**
+	 * Permette di spostare sul nodo TuCSoN indicato tutte le tuple che fanno match con il template specificato e che appartengono ad uno fra i centri di tuple
+	 * specificati. Questa operazione comporta, inoltre, l'eliminazione sul nodo TuCSoN locale di tutte le tuple che subiscono lo 
+	 * spostamento.
+	 * @param destinationNetId L'indirizzo IP o nome DNS del nodo TuCSoN di destinazione.
+	 * @param portno Il numero di porta del nodo TuCSoN di destinazione.
+	 * @param tupleTemplate Il template delle tuple che si vogliono trasferire. Se &egrave; null vengono trasferite tutte le tuple.
+	 * @param tupleCentreNames Un array contenente i nomi di tutti i centri di tuple che si vogliono trasferire.
+	 * @throws UnreachableNodeException Se il nodo TuCSoN non &egrave; raggiungibile.
+	 * @throws NoTucsonAuthenticationException Se l'agente non ha effettuato precedentemente l'autenticazione.
+	 * @throws IllegalArgumentException Se il numero di porta &egrave; invalido.
+	 */
 	public void doMove(String destinationNetId, int portno,
 			String tupleTemplate, String[] tupleCentreNames)
 			throws UnreachableNodeException, NoTucsonAuthenticationException,
 			IllegalArgumentException;
 
+	/**
+	 * Identica a {@link #doMove(String, int, String, String[])} ma permette di identificare un nodo TuCSoN sulla base di un nome
+	 * simbolico piuttosto che delle sue informazioni di rete.
+	 * @param nodeName Il nome simbolico del nodo TuCSoN.
+	 * @throws ServiceException Se si verificano problemi nel {@linkplain TuCSoNService}.
+	 * @throws TucsonNodeNotFoundException Se non esiste nessun nodo TuCSoN identificato da <code>nodeName</code>.
+	 */
 	public void doMove(String nodeName, String tupleTemplate,
 			String[] tupleCentreNames) throws UnreachableNodeException,
 			NoTucsonAuthenticationException, ServiceException,
 			TucsonNodeNotFoundException;
 
+	
 	public void doClone(String destinationNetId, int portno,
 			String tupleTemplate, String[] tupleCentreNames) throws UnreachableNodeException,
 			NoTucsonAuthenticationException, IllegalArgumentException;
@@ -145,5 +152,9 @@ public interface TuCSoNHelper extends ServiceHelper {
 			TucsonNodeNotFoundException;
 
 	public void addTupleCentreName(String tcName, String netId, int portno)
-			throws IllegalArgumentException;
+			throws ServiceException, IllegalArgumentException, IMTPException;
+	
+	public void removeTupleCentreName(String tcName) throws IMTPException, ServiceException;
+	
+	public InetSocketAddress findTupleCentre(String tcName) throws ServiceException, IMTPException, TucsonNodeNotFoundException;
 }
