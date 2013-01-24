@@ -676,14 +676,24 @@ public class TuCSoNService extends BaseService {
 				nodeName = (String) cmd.getParam(0);
 				addr = (InetSocketAddress) cmd.getParam(1);
 				
-				TuCSoNService.this.mTucsonNodes.put(nodeName, addr);
+				InetSocketAddress previous = TuCSoNService.this.mTucsonNodes.put(nodeName, addr);
+				if (previous == null){
+					System.out.println("[TuCSoNService] Nodo TuCSoN "+nodeName+" aggiunto");
+				} else {
+					System.out.println("[TuCSoNService] Il nodo "+nodeName+" ha sovrascritto il precedente: "+previous.getAddress().getHostAddress()+":"+previous.getPort());
+				}
 				break;
 				
 			case TuCSoNSlice.H_REMOVETUPLECENTRE:
 				
 				nodeName = (String) cmd.getParam(0);
 				
-				TuCSoNService.this.mTucsonNodes.remove(nodeName);
+				previous = TuCSoNService.this.mTucsonNodes.remove(nodeName);
+				if (previous == null){
+					System.out.println("[TuCSoNService] Nodo "+nodeName+" non presente");
+				} else {
+					System.out.println("[TuCSoNService] Nodo "+nodeName+" rimosso");
+				}
 				break;
 			}
 

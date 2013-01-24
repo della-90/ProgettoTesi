@@ -60,10 +60,13 @@ public class TuCSoNAgent extends Agent {
 				action = new Out(tcid, tuple);
 				handler.executeSynch(action, null);
 				
+				helper.addTupleCentreName("contabilità", "localhost", 20509);
+				helper.removeTupleCentreName("tempo");
+				
 				String[] tupleCentreNames = handler.getVisitedTupleCentreNames();
 				System.out.println("Visited tuple centres: "+Arrays.toString(tupleCentreNames));
-				helper.doMove("tempo", "msg(X)", tupleCentreNames);
-				helper.doClone("prova", "mess(X)", tupleCentreNames);
+//				helper.doMove("tempo", "msg(X)", tupleCentreNames);
+//				helper.doClone("prova", "mess(X)", tupleCentreNames);
 				
 			} catch (ServiceException e) {
 				e.printStackTrace();

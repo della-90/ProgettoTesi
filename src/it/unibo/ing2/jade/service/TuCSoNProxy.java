@@ -56,7 +56,7 @@ public class TuCSoNProxy extends SliceProxy implements TuCSoNSlice {
 	public void removeTupleCentre(String tupleCentreName)
 			throws IMTPException, ServiceException {
 		
-		System.out.println("[TuCSoNProxy] addTupleCentre: "+tupleCentreName);
+		System.out.println("[TuCSoNProxy] removeTupleCentre: "+tupleCentreName);
 
 		GenericCommand cmd = new GenericCommand(TuCSoNSlice.H_REMOVETUPLECENTRE, TuCSoNService.NAME, null);
 		cmd.addParam(tupleCentreName);
