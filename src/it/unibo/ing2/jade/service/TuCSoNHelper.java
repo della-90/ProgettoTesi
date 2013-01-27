@@ -157,4 +157,6 @@ public interface TuCSoNHelper extends ServiceHelper {
 	public void removeTupleCentreName(String tcName) throws IMTPException, ServiceException;
 	
 	public InetSocketAddress findTupleCentre(String tcName) throws ServiceException, IMTPException, TucsonNodeNotFoundException;
+	
+	public void setMainNode(String netId, int portno) throws TucsonInvalidTupleCentreIdException;
 }
