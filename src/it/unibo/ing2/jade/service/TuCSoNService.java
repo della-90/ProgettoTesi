@@ -367,7 +367,7 @@ public class TuCSoNService extends BaseService {
 
 				// Eseguo la tupla direttamente dalle API TuCSoN
 				System.out.println("[TuCSoNService] Doing out of tuple: "
-						+ tuple);
+						+ tuple+" on TC "+mobilityTC);
 				acc.out(mobilityTC, tuple, null);
 
 			} catch (InvalidLogicTupleException | OperationTimeOutException e) {
@@ -558,17 +558,19 @@ public class TuCSoNService extends BaseService {
 		@Override
 		public void authenticate(Agent agent)
 				throws TucsonInvalidAgentIdException {
-			if (mAccManager.hasAcc(myAgent)){
+			if (mAccManager.hasAcc(agent)){
 				return;
 			}
 			EnhancedACC acc = obtainAcc(agent);
 			mAccManager.addAcc(agent, acc);
+			System.out.println("[TuCSoNHelper] Ottenuto acc "+acc+" per l'agente "+agent.getLocalName());
 		}
 
 		@Override
 		public void authenticate(Agent agent, String netid, int portno)
 				throws TucsonInvalidAgentIdException {
-			if (mAccManager.hasAcc(myAgent)){
+			if (mAccManager.hasAcc(agent)){
+				System.out.println("[TuCSoNHelper] L'agente possiede già un ACC");
 				return;
 			}
 			EnhancedACC acc = obtainAcc(agent, netid, portno);
@@ -577,6 +579,15 @@ public class TuCSoNService extends BaseService {
 
 		@Override
 		public void deauthenticate(Agent agent) {
+			//Esco dall'acc
+			EnhancedACC acc = mAccManager.getAcc(agent);
+			if (acc!=null){
+				try {
+					acc.exit();
+				} catch (TucsonOperationNotPossibleException e) {
+					e.printStackTrace();
+				}
+			}
 			//Rimuovo l'ACC
 			mAccManager.removeAcc(agent);
 			
