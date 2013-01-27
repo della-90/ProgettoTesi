@@ -482,6 +482,11 @@ public class TuCSoNService extends BaseService {
 		}
 		
 		@Override
+		public void setMainNode(String netId, int portno) throws TucsonInvalidTupleCentreIdException {
+			mobilityTC = new TucsonTupleCentreId("default", netId, ""+portno);
+		}
+		
+		@Override
 		public void doMove(String nodeName, String tupleTemplate,
 				String[] tupleCentreNames) throws UnreachableNodeException,
 				NoTucsonAuthenticationException, ServiceException, TucsonNodeNotFoundException {
